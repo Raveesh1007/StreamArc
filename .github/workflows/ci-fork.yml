@@ -13,8 +13,8 @@ jobs:
   build:
     strategy:
       matrix:
-        module: [airdrops, bob, flow, lockup, utils]
-    uses: "streamarc-labs/gha-utils/.github/workflows/forge-build.yml@main"
+        module: [airdrops, flow, lockup, utils]
+    uses: "sablier-labs/gha-utils/.github/workflows/forge-build.yml@92b8ac45efc96fc01c66ad4da579daff8ed58af3"
     with:
       cache-path: &cache-path |
         ${{ matrix.module }}/cache
@@ -35,15 +35,13 @@ jobs:
         include:
           - module: airdrops
             match-path: "tests/fork/**/*.sol"
-          - module: bob
-            match-path: "tests/*/fork/**/*.sol"
           - module: flow
             match-path: "tests/fork/**/*.sol"
           - module: lockup
             match-path: "tests/fork/**/*.sol"
           - module: utils
             match-path: "tests/fork/**/*.sol"
-    uses: "streamarc-labs/gha-utils/.github/workflows/forge-test.yml@main"
+    uses: "sablier-labs/gha-utils/.github/workflows/forge-test.yml@92b8ac45efc96fc01c66ad4da579daff8ed58af3"
     with:
       cache-path: *cache-path
       foundry-fuzz-runs: 100

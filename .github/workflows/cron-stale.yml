@@ -7,4 +7,4 @@ on:
 
 jobs:
   cron-stale:
-    uses: "streamarc-labs/gha-utils/.github/workflows/cron-stale.yml@main"
+    uses: "sablier-labs/gha-utils/.github/workflows/cron-stale.yml@92b8ac45efc96fc01c66ad4da579daff8ed58af3"

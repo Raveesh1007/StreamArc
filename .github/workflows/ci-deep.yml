@@ -27,8 +27,8 @@ jobs:
     name: "${{ matrix.module }} / Build"
     strategy:
       matrix:
-        module: [airdrops, bob, flow, lockup, utils]
-    uses: "streamarc-labs/gha-utils/.github/workflows/forge-build.yml@main"
+        module: [airdrops, flow, lockup, utils]
+    uses: "sablier-labs/gha-utils/.github/workflows/forge-build.yml@92b8ac45efc96fc01c66ad4da579daff8ed58af3"
     with:
       cache-path: &cache-path |
         ${{ matrix.module }}/cache
@@ -48,15 +48,13 @@ jobs:
         include:
           - module: airdrops
             match-path: "tests/integration/fuzz/**/*.sol"
-          - module: bob
-            match-path: "tests/*/integration/fuzz/**/*.sol"
           - module: flow
             match-path: "tests/integration/fuzz/**/*.sol"
           - module: lockup
             match-path: "tests/integration/fuzz/**/*.sol"
           - module: utils
             match-path: "tests/integration/fuzz/**/*.sol"
-    uses: "streamarc-labs/gha-utils/.github/workflows/forge-test.yml@main"
+    uses: "sablier-labs/gha-utils/.github/workflows/forge-test.yml@92b8ac45efc96fc01c66ad4da579daff8ed58af3"
     with:
       cache-path: *cache-path
       foundry-fuzz-runs: ${{ fromJSON(inputs.integrationFuzzRuns || '10000') }}
@@ -75,15 +73,13 @@ jobs:
         include:
           - module: airdrops
             match-path: "tests/invariant/**/*.sol"
-          - module: bob
-            match-path: "tests/*/invariant/**/*.sol"
           - module: flow
             match-path: "tests/invariant/**/*.sol"
           - module: lockup
             match-path: "tests/invariant/**/*.sol"
           - module: utils
             match-path: "tests/invariant/**/*.sol"
-    uses: "streamarc-labs/gha-utils/.github/workflows/forge-test.yml@main"
+    uses: "sablier-labs/gha-utils/.github/workflows/forge-test.yml@92b8ac45efc96fc01c66ad4da579daff8ed58af3"
     with:
       cache-path: *cache-path
       foundry-invariant-depth: ${{ fromJSON(inputs.invariantDepth || '200') }}

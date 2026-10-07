@@ -43,14 +43,14 @@ on:
 
 jobs:
   check:
-    uses: "streamarc-labs/gha-utils/.github/workflows/full-check.yml@main"
+    uses: "sablier-labs/gha-utils/.github/workflows/full-check.yml@92b8ac45efc96fc01c66ad4da579daff8ed58af3"
     with:
       foundry-version: &foundry-version "v1.8.3"
       name: "Full check"
       working-directory: ${{ inputs.module }}
 
   build:
-    uses: "streamarc-labs/gha-utils/.github/workflows/forge-build.yml@main"
+    uses: "sablier-labs/gha-utils/.github/workflows/forge-build.yml@92b8ac45efc96fc01c66ad4da579daff8ed58af3"
     with:
       cache-path: &cache-path |
         ${{ inputs.module }}/cache
@@ -64,7 +64,7 @@ jobs:
   test-bulloak:
     needs: ["build", "check"]
     if: needs.build.outputs.cache-status != 'primary'
-    uses: "streamarc-labs/gha-utils/.github/workflows/bulloak-check.yml@main"
+    uses: "sablier-labs/gha-utils/.github/workflows/bulloak-check.yml@92b8ac45efc96fc01c66ad4da579daff8ed58af3"
     with:
       name: "Bulloak check"
       skip-modifiers: true
@@ -76,7 +76,7 @@ jobs:
     if: needs.build.outputs.cache-status != 'primary'
     secrets:
       ROUTEMESH_API_KEY: ${{ secrets.ROUTEMESH_API_KEY }}
-    uses: "streamarc-labs/gha-utils/.github/workflows/forge-test.yml@main"
+    uses: "sablier-labs/gha-utils/.github/workflows/forge-test.yml@92b8ac45efc96fc01c66ad4da579daff8ed58af3"
     with:
       cache-path: *cache-path
       foundry-fuzz-runs: 20
@@ -89,7 +89,7 @@ jobs:
   test-integration:
     needs: ["build", "check"]
     if: needs.build.outputs.cache-status != 'primary'
-    uses: "streamarc-labs/gha-utils/.github/workflows/forge-test.yml@main"
+    uses: "sablier-labs/gha-utils/.github/workflows/forge-test.yml@92b8ac45efc96fc01c66ad4da579daff8ed58af3"
     with:
       cache-path: *cache-path
       foundry-profile: "test-optimized"
@@ -101,7 +101,7 @@ jobs:
   test-invariant:
     needs: ["build", "check"]
     if: needs.build.outputs.cache-status != 'primary' && !inputs.exclude-invariant-tests
-    uses: "streamarc-labs/gha-utils/.github/workflows/forge-test.yml@main"
+    uses: "sablier-labs/gha-utils/.github/workflows/forge-test.yml@92b8ac45efc96fc01c66ad4da579daff8ed58af3"
     with:
       cache-path: *cache-path
       foundry-profile: "test-optimized"
@@ -113,7 +113,7 @@ jobs:
   test-unit:
     needs: ["build", "check"]
     if: needs.build.outputs.cache-status != 'primary' && !inputs.exclude-unit-tests
-    uses: "streamarc-labs/gha-utils/.github/workflows/forge-test.yml@main"
+    uses: "sablier-labs/gha-utils/.github/workflows/forge-test.yml@92b8ac45efc96fc01c66ad4da579daff8ed58af3"
     with:
       cache-path: *cache-path
       foundry-profile: "test-optimized"
@@ -127,7 +127,7 @@ jobs:
     if: needs.build.outputs.cache-status != 'primary'
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-    uses: "streamarc-labs/gha-utils/.github/workflows/forge-coverage.yml@main"
+    uses: "sablier-labs/gha-utils/.github/workflows/forge-coverage.yml@92b8ac45efc96fc01c66ad4da579daff8ed58af3"
     with:
       cache-path: *cache-path
       foundry-version: *foundry-version
