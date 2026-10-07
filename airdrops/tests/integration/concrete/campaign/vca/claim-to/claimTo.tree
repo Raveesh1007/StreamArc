@@ -1,0 +1,33 @@
+ClaimTo_MerkleVCA_Integration_Concrete_Test
+└── when merkle proof valid
+   ├── when vesting start time in future
+   │  └── it should revert
+   ├── when vesting start time in present
+   │  ├── it should transfer the unlock amount to Eve
+   │  ├── it should mark the index as Claimed
+   │  ├── it should update total forgone amount
+   │  └── it should emit a {ClaimVCA} event
+   └── when vesting start time in past
+      ├── when vesting end time in future
+      │  ├── it should transfer a portion of the amount to Eve
+      │  ├── it should mark the index as Claimed
+      │  ├── it should update total forgone amount
+      │  └── it should emit a {ClaimVCA} event
+      └── when vesting end time not in future
+         ├── given redistribution not enabled
+         │  ├── it should transfer the full amount to Eve
+         │  ├── it should mark the index as Claimed
+         │  ├── it should not update total forgone amount
+         │  └── it should emit a {ClaimVCA} event
+         └── given redistribution enabled
+            ├── when reward exceeds remaining balance
+            │  ├── it should cap the reward to remaining redistribution balance
+            │  ├── it should transfer the full amount and capped reward
+            │  ├── it should mark the index as Claimed
+            │  ├── it should not update total forgone amount
+            │  └── it should emit a {ClaimVCA} event
+            └── when reward not exceed remaining balance
+               ├── it should transfer the full amount and reward
+               ├── it should mark the index as Claimed
+               ├── it should not update total forgone amount
+               └── it should emit a {ClaimVCA} event

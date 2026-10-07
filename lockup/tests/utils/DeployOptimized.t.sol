@@ -1,0 +1,104 @@
+// SPDX-License-Identifier: UNLICENSED
+// solhint-disable no-inline-assembly
+pragma solidity >=0.8.22 <0.9.0;
+
+import { BaseTest as CommonBase } from "@streamarc/evm-utils/src/tests/BaseTest.sol";
+import { stdJson } from "forge-std/src/StdJson.sol";
+
+import { ILockupNFTDescriptor } from "../../src/interfaces/ILockupNFTDescriptor.sol";
+import { IStreamArcBatchLockup } from "../../src/interfaces/IStreamArcBatchLockup.sol";
+import { IStreamArcLockup } from "../../src/interfaces/IStreamArcLockup.sol";
+
+abstract contract DeployOptimized is CommonBase {
+    using stdJson for string;
+
+    /// @dev Deploys {StreamArcBatchLockup} from an optimized source compiled with `--via-ir`.
+    function deployOptimizedBatchLockup() internal returns (IStreamArcBatchLockup) {
+        return IStreamArcBatchLockup(deployCode("out-optimized/StreamArcBatchLockup.sol/StreamArcBatchLockup.json"));
+    }
+
+    /// @dev Deploys the optimized {LockupHelpers}, {LockupMath}, and {SafeOracle} libraries.
+    function deployOptimizedLibraries() internal returns (address helpers, address lockupMath, address safeOracle) {
+        helpers = deployCode("out-optimized/LockupHelpers.sol/LockupHelpers.json");
+        lockupMath = deployCode("out-optimized/LockupMath.sol/LockupMath.json");
+        safeOracle = deployCode("out-optimized/SafeOracle.sol/SafeOracle.json");
+    }
+
+    /// @dev Deploys {StreamArcLockup} from an optimized source compiled with `--via-ir`.
+    function deployOptimizedLockup(
+        address initialComptroller,
+        ILockupNFTDescriptor nftDescriptor_
+    )
+        internal
+        returns (IStreamArcLockup lockup)
+    {
+        // Deploy the libraries.
+        (address helpers, address lockupMath, address safeOracle) = deployOptimizedLibraries();
+
+        // Get the bytecode from {StreamArcLockup} artifact.
+        string memory artifactJson = vm.readFile("out-optimized/StreamArcLockup.sol/StreamArcLockup.json");
+        string memory rawBytecode = artifactJson.readString(".bytecode.object");
+
+        // Replace the library placeholders with the library addresses to link the libraries with the contract.
+        rawBytecode = vm.replace({
+            input: rawBytecode,
+            from: libraryPlaceholder("src/libraries/LockupHelpers.sol:LockupHelpers"),
+            to: vm.replace(vm.toString(helpers), "0x", "")
+        });
+        rawBytecode = vm.replace({
+            input: rawBytecode,
+            from: libraryPlaceholder("src/libraries/LockupMath.sol:LockupMath"),
+            to: vm.replace(vm.toString(lockupMath), "0x", "")
+        });
+        rawBytecode = vm.replace({
+            input: rawBytecode,
+            from: libraryPlaceholder("node_modules/@streamarc/evm-utils/src/libraries/SafeOracle.sol:SafeOracle"),
+            to: vm.replace(vm.toString(safeOracle), "0x", "")
+        });
+
+        // Generate the creation bytecode with the constructor arguments.
+        bytes memory createBytecode =
+            bytes.concat(vm.parseBytes(rawBytecode), abi.encode(initialComptroller, nftDescriptor_));
+        assembly {
+            // Deploy the Lockup contract.
+            lockup := create(0, add(createBytecode, 0x20), mload(createBytecode))
+        }
+
+        require(address(lockup) != address(0), "Lockup deployment failed");
+
+        return IStreamArcLockup(lockup);
+    }
+
+    /// @dev Deploys {LockupNFTDescriptor} from an optimized source compiled with `--via-ir`.
+    function deployOptimizedNFTDescriptor() internal returns (ILockupNFTDescriptor) {
+        return ILockupNFTDescriptor(deployCode("out-optimized/LockupNFTDescriptor.sol/LockupNFTDescriptor.json"));
+    }
+
+    /// @notice Deploys all contracts from an optimized source compiled with `--via-ir` in the following order:
+    ///
+    /// 1. {LockupNFTDescriptor}
+    /// 2. {StreamArcLockup}
+    /// 3. {StreamArcBatchLockup}
+    function deployOptimizedProtocol(address initialComptroller)
+        internal
+        returns (ILockupNFTDescriptor nftDescriptor_, IStreamArcLockup lockup_, IStreamArcBatchLockup batchLockup_)
+    {
+        nftDescriptor_ = deployOptimizedNFTDescriptor();
+        lockup_ = deployOptimizedLockup(initialComptroller, nftDescriptor_);
+        batchLockup_ = deployOptimizedBatchLockup();
+    }
+
+    /// @dev Get the library placeholder which is a 34 character prefix of the hex encoding of the keccak256 hash of the
+    /// fully qualified library name. It is a unique marker generated during compilation to represent the location in
+    /// the bytecode where the address of the library should be inserted.
+    function libraryPlaceholder(string memory libraryName) internal pure returns (string memory) {
+        // Get the first 17 bytes of the hex encoding of the keccak256 hash of the library name.
+        bytes memory placeholder = abi.encodePacked(bytes17(keccak256(abi.encodePacked(libraryName))));
+
+        // Remove "0x" from the placeholder.
+        string memory placeholderWithout0x = vm.replace(vm.toString(placeholder), "0x", "");
+
+        // Append the expected prefix and suffix to the placeholder.
+        return string.concat("__$", placeholderWithout0x, "$__");
+    }
+}

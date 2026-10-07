@@ -1,0 +1,30 @@
+name: "CI: Bob"
+run-name: "CI Bob :: ${{ github.event.head_commit.message || github.event.pull_request.title }}"
+
+concurrency:
+  cancel-in-progress: true
+  group: ${{github.workflow}}-${{github.ref}}
+
+on:
+  workflow_dispatch:
+  push: &path_filters
+    branches: [main, staging]
+    paths:
+      - ".github/workflows/ci-bob.yml"
+      - ".github/workflows/ci-module.yml"
+      - "bob/**"
+      - "foundry.base.toml"
+      - "package.json"
+  pull_request: *path_filters
+
+jobs:
+  ci:
+    uses: "./.github/workflows/ci-module.yml"
+    secrets: inherit
+    with:
+      exclude-unit-tests: true
+      match-path-coverage: "tests/*/integration/**/*.sol"
+      match-path-fork: "tests/*/fork/**/*.sol"
+      match-path-integration: "tests/*/integration/**/*.sol"
+      match-path-invariant: "tests/*/invariant/**/*.sol"
+      module: "bob"

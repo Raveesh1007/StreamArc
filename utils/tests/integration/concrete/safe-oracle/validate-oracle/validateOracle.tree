@@ -1,0 +1,22 @@
+ValidateOracle_Integration_Concrete_Test
+├── when oracle address zero
+│  └── it should revert
+└── when oracle address not zero
+   ├── when oracle misses decimals
+   │  └── it should revert
+   └── when oracle not miss decimals
+      ├── when oracle decimals zero
+      │  └── it should revert
+      └── when oracle decimals not zero
+         ├── when oracle decimals too high
+         │  └── it should revert
+         └── when oracle decimals not too high
+            ├── when oracle misses latestRoundData
+            │  └── it should revert
+            └── when oracle not miss latestRoundData
+               ├── when oracle price negative
+               │  └── it should revert
+               ├── when oracle price zero
+               │  └── it should revert
+               └── when oracle price positive
+                  └── it should return the latest price normalized to eight decimals

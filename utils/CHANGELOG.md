@@ -1,0 +1,87 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Common Changelog](https://common-changelog.org/).
+
+## [2.0.1] - 2026-03-23
+
+### Added
+
+- Add support for Denergy chain ([#1464](https://github.com/Raveesh1007/StreamArc/pull/1464))
+
+### Removed
+
+- Drop support for Mode Sepolia and Sophon ([#1463](https://github.com/Raveesh1007/StreamArc/pull/1463),
+  [#1467](https://github.com/Raveesh1007/StreamArc/pull/1467))
+
+## [2.0.0] - 2026-03-16
+
+### Changed
+
+- **Breaking**: Rename `RoleGranted` event to `GrantRole`
+  ([#1433](https://github.com/Raveesh1007/StreamArc/pull/1433))
+- **Breaking**: Merge `DisableCustomFeeUSD` and `SetCustomFeeUSD` events into `UpdateCustomFeeUSD`
+  ([#1369](https://github.com/Raveesh1007/StreamArc/pull/1369))
+
+### Added
+
+- **Breaking**: Add Bob protocol fee support to initialize function of Comptroller
+  ([#1421](https://github.com/Raveesh1007/StreamArc/pull/1421))
+  - Add `Bob` to `IStreamArcComptroller.Protocol` enum ([#1404](https://github.com/Raveesh1007/StreamArc/pull/1404))
+- Add `SafeOracle` library ([#1413](https://github.com/Raveesh1007/StreamArc/pull/1413))
+- Add `SafeTokenSymbol` library (moved from `lockup` package)
+  ([#1424](https://github.com/Raveesh1007/StreamArc/pull/1424))
+- Add `ATTESTOR_MANAGER_ROLE` role to `RoleAdminable` contract
+  ([#1429](https://github.com/Raveesh1007/StreamArc/pull/1429))
+- Add `setAttestor` and `setAttestorForCampaign` functions to Comptroller for managing attestor address
+  ([#1403](https://github.com/Raveesh1007/StreamArc/pull/1403))
+- Add `lowerMinFeeUSDForCampaign` function to Comptroller
+  ([#1371](https://github.com/Raveesh1007/StreamArc/pull/1371))
+- Add `withdrawERC20Token` function to withdraw ERC20 Tokens from Comptroller
+  ([#1404](https://github.com/Raveesh1007/StreamArc/pull/1404))
+- Add versioning to Comptroller ([#1402](https://github.com/Raveesh1007/StreamArc/pull/1402))
+- Add `DEFAULT_STREAMARC_MULTISIG_ADMIN` address to `BaseScript`
+  ([#1397](https://github.com/Raveesh1007/StreamArc/pull/1397))
+
+### Removed
+
+- Drop support for Blast, CoreDAO and SEI chains from `ChainId` library
+  ([#1391](https://github.com/Raveesh1007/StreamArc/pull/1391),
+  [#1451](https://github.com/Raveesh1007/StreamArc/pull/1451))
+
+## [1.0.2] - 2025-11-10
+
+### Added
+
+- Support for Monad network
+
+## [1.0.1] - 2025-10-22
+
+### Changed
+
+- Fix the test fork ethereum helper function ([#68](https://github.com/streamarc-labs/evm-utils/pull/68))
+
+### Added
+
+- Add more functions in `ChainId` library ([#67](https://github.com/streamarc-labs/evm-utils/pull/67))
+
+## [1.0.0] - 2025-09-25
+
+### Added
+
+- Add `StreamArcComptroller` for managing fees across StreamArc EVM protocols
+- Add support for UUPS upgradeability for `StreamArcComptroller`
+- Add `Comptrollerable` to provide a setter and getter for the StreamArc Comptroller
+- Add `Adminable` to provide admin functionality with ownership transfer
+- Add `Batch` to provide support for batching of functions
+- Add `NoDelegateCall` to provide support for preventing delegate calls
+- Add `RoleAdminable` to provide role-based access control mechanisms
+- Add base contracts for testing StreamArc EVM protocols
+- Add mock contracts used across StreamArc EVM protocols
+
+[1.0.0]: https://github.com/streamarc-labs/evm-utils/releases/tag/v1.0.0
+[1.0.1]: https://github.com/streamarc-labs/evm-utils/releases/tag/v1.0.1
+[1.0.2]: https://github.com/streamarc-labs/evm-utils/releases/tag/v1.0.2
+[2.0.0]: https://github.com/Raveesh1007/StreamArc/releases/tag/utils@v2.0.0
+[2.0.1]: https://github.com/Raveesh1007/StreamArc/releases/tag/utils@v2.0.1

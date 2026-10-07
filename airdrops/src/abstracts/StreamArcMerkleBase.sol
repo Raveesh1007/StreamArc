@@ -1,0 +1,265 @@
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity >=0.8.22;
+
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { MerkleProof } from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import { BitMaps } from "@openzeppelin/contracts/utils/structs/BitMaps.sol";
+import { Adminable } from "@streamarc/evm-utils/src/Adminable.sol";
+import { IStreamArcComptroller } from "@streamarc/evm-utils/src/interfaces/IStreamArcComptroller.sol";
+
+import { IStreamArcMerkleBase } from "./../interfaces/IStreamArcMerkleBase.sol";
+import { Errors } from "./../libraries/Errors.sol";
+import { ClaimType, MerkleBase } from "../types/MerkleBase.sol";
+
+/// @title StreamArcMerkleBase
+/// @notice See the documentation in {IStreamArcMerkleBase}.
+abstract contract StreamArcMerkleBase is
+    IStreamArcMerkleBase, // 1 inherited component
+    Adminable // 1 inherited component
+{
+    using BitMaps for BitMaps.BitMap;
+    using SafeERC20 for IERC20;
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                  STATE VARIABLES
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /// @inheritdoc IStreamArcMerkleBase
+    uint40 public immutable override CAMPAIGN_START_TIME;
+
+    /// @inheritdoc IStreamArcMerkleBase
+    ClaimType public immutable override CLAIM_TYPE;
+
+    /// @inheritdoc IStreamArcMerkleBase
+    address public immutable override COMPTROLLER;
+
+    /// @inheritdoc IStreamArcMerkleBase
+    uint40 public immutable override EXPIRATION;
+
+    /// @inheritdoc IStreamArcMerkleBase
+    bool public constant override IS_STREAMARC_MERKLE = true;
+
+    /// @inheritdoc IStreamArcMerkleBase
+    bytes32 public immutable override MERKLE_ROOT;
+
+    /// @inheritdoc IStreamArcMerkleBase
+    IERC20 public immutable override TOKEN;
+
+    /// @inheritdoc IStreamArcMerkleBase
+    string public override campaignName;
+
+    /// @inheritdoc IStreamArcMerkleBase
+    uint40 public override firstClaimTime;
+
+    /// @inheritdoc IStreamArcMerkleBase
+    string public override ipfsCID;
+
+    /// @inheritdoc IStreamArcMerkleBase
+    uint256 public override minFeeUSD;
+
+    /// @dev Packed booleans that record the history of claims.
+    BitMaps.BitMap internal _claimedBitMap;
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                     MODIFIERS
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /// @dev Modifier to check that `to` is not zero address.
+    modifier notZeroAddress(address to) {
+        if (to == address(0)) {
+            revert Errors.StreamArcMerkleBase_ToZeroAddress();
+        }
+        _;
+    }
+
+    /// @dev Modifier to revert if `claimType` value does not match the campaign's claim type.
+    modifier revertIfNot(ClaimType claimType) {
+        if (CLAIM_TYPE != claimType) {
+            revert Errors.StreamArcMerkleBase_UnsupportedClaimType({
+                claimTypeRequired: claimType,
+                claimTypeSupported: CLAIM_TYPE
+            });
+        }
+        _;
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                    CONSTRUCTOR
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /// @notice Constructs the contract by initializing the immutable state variables.
+    constructor(MerkleBase.ConstructorParams memory baseParams) Adminable(baseParams.initialAdmin) {
+        CAMPAIGN_START_TIME = baseParams.campaignStartTime;
+        CLAIM_TYPE = baseParams.claimType;
+        COMPTROLLER = baseParams.comptroller;
+        EXPIRATION = baseParams.expiration;
+        MERKLE_ROOT = baseParams.merkleRoot;
+        TOKEN = baseParams.token;
+
+        campaignName = baseParams.campaignName;
+        ipfsCID = baseParams.ipfsCID;
+        minFeeUSD = IStreamArcComptroller(baseParams.comptroller).getMinFeeUSDFor({
+            protocol: IStreamArcComptroller.Protocol.Airdrops,
+            user: baseParams.campaignCreator
+        });
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                          USER-FACING READ-ONLY FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /// @inheritdoc IStreamArcMerkleBase
+    function calculateMinFeeWei() external view override returns (uint256) {
+        return IStreamArcComptroller(COMPTROLLER).convertUSDFeeToWei(minFeeUSD);
+    }
+
+    /// @inheritdoc IStreamArcMerkleBase
+    function hasClaimed(uint256 index) public view override returns (bool) {
+        return _claimedBitMap.get(index);
+    }
+
+    /// @inheritdoc IStreamArcMerkleBase
+    function hasExpired() public view override returns (bool) {
+        return EXPIRATION > 0 && EXPIRATION <= block.timestamp;
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                        USER-FACING STATE-CHANGING FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /// @inheritdoc IStreamArcMerkleBase
+    function clawback(address to, uint128 amount) external override onlyAdmin {
+        // Check: the grace period has passed and the campaign has not expired.
+        if (_hasGracePeriodPassed() && !hasExpired()) {
+            revert Errors.StreamArcMerkleBase_ClawbackNotAllowed({
+                blockTimestamp: block.timestamp,
+                expiration: EXPIRATION,
+                firstClaimTime: firstClaimTime
+            });
+        }
+
+        // Effect: transfer the tokens to the provided address.
+        TOKEN.safeTransfer({ to: to, value: amount });
+
+        // Log the clawback.
+        emit Clawback({ admin: admin, to: to, amount: amount });
+    }
+
+    /// @inheritdoc IStreamArcMerkleBase
+    function lowerMinFeeUSD(uint256 newMinFeeUSD) external override {
+        // Check: the caller is the comptroller.
+        if (COMPTROLLER != msg.sender) {
+            revert Errors.StreamArcMerkleBase_CallerNotComptroller(COMPTROLLER, msg.sender);
+        }
+
+        uint256 currentMinFeeUSD = minFeeUSD;
+
+        // Check: the new min USD fee is lower than the current min fee USD.
+        if (newMinFeeUSD >= currentMinFeeUSD) {
+            revert Errors.StreamArcMerkleBase_NewMinFeeUSDNotLower(currentMinFeeUSD, newMinFeeUSD);
+        }
+
+        // Effect: update the min USD fee.
+        minFeeUSD = newMinFeeUSD;
+
+        // Log the event.
+        emit LowerMinFeeUSD({
+            comptroller: COMPTROLLER,
+            newMinFeeUSD: newMinFeeUSD,
+            previousMinFeeUSD: currentMinFeeUSD
+        });
+    }
+
+    /// @inheritdoc IStreamArcMerkleBase
+    function sponsor(IERC20 token, uint128 amount, address biller) external override notZeroAddress(biller) {
+        // Check: the amount is not zero.
+        if (amount == 0) {
+            revert Errors.StreamArcMerkleBase_SponsorAmountZero();
+        }
+
+        // Interaction: transfer the tokens from the caller to the biller address.
+        token.safeTransferFrom({ from: msg.sender, to: biller, value: amount });
+
+        // Log the sponsorship.
+        emit Sponsor({ caller: msg.sender, token: token, amount: amount, biller: biller });
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                            PRIVATE READ-ONLY FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /// @notice Returns a flag indicating whether the grace period has passed.
+    /// @dev The grace period is 7 days after the first claim.
+    function _hasGracePeriodPassed() private view returns (bool) {
+        return firstClaimTime > 0 && block.timestamp > firstClaimTime + 7 days;
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                         INTERNAL STATE-CHANGING FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /// @dev See the documentation for the user-facing functions that call this internal function.
+    function _preProcessClaim(
+        uint256 index,
+        address recipient,
+        uint128 amount,
+        bytes32[] calldata merkleProof
+    )
+        internal
+    {
+        // Check: the campaign start time is not in the future.
+        if (CAMPAIGN_START_TIME > block.timestamp) {
+            revert Errors.StreamArcMerkleBase_CampaignNotStarted({
+                blockTimestamp: block.timestamp,
+                campaignStartTime: CAMPAIGN_START_TIME
+            });
+        }
+
+        // Check: the campaign has not expired.
+        if (hasExpired()) {
+            revert Errors.StreamArcMerkleBase_CampaignExpired({ blockTimestamp: block.timestamp, expiration: EXPIRATION });
+        }
+
+        // Safe interaction: calculate the min fee in wei.
+        uint256 minFeeWei = IStreamArcComptroller(COMPTROLLER).convertUSDFeeToWei(minFeeUSD);
+
+        uint256 feePaid = msg.value;
+
+        // Check: the min fee is paid.
+        if (feePaid < minFeeWei) {
+            revert Errors.StreamArcMerkleBase_InsufficientFeePayment(feePaid, minFeeWei);
+        }
+
+        // Check: the index has not been claimed.
+        if (_claimedBitMap.get(index)) {
+            revert Errors.StreamArcMerkleBase_IndexClaimed(index);
+        }
+
+        // Generate the Merkle tree leaf. Hashing twice prevents second preimage attacks.
+        bytes32 leaf = keccak256(bytes.concat(keccak256(abi.encode(index, recipient, amount))));
+
+        // Check: the Merkle proof corresponds to the Merkle root and the leaf.
+        if (!MerkleProof.verify(merkleProof, MERKLE_ROOT, leaf)) {
+            revert Errors.StreamArcMerkleBase_InvalidProof();
+        }
+
+        // Effect: if this is the first time claim, take a record of the block timestamp.
+        if (firstClaimTime == 0) {
+            firstClaimTime = uint40(block.timestamp);
+        }
+
+        // Effect: mark the index as claimed.
+        _claimedBitMap.set(index);
+
+        // Interaction: transfer the fee to comptroller if it's greater than 0.
+        if (feePaid > 0) {
+            (bool success,) = COMPTROLLER.call{ value: feePaid }("");
+
+            // Revert if the transfer failed.
+            if (!success) {
+                revert Errors.StreamArcMerkleBase_FeeTransferFailed(COMPTROLLER, feePaid);
+            }
+        }
+    }
+}

@@ -1,0 +1,75 @@
+{
+  "name": "@streamarc/airdrops",
+  "description": "EVM smart contracts of the StreamArc Airdrops protocol",
+  "license": "SEE LICENSE IN LICENSE",
+  "version": "3.0.1",
+  "author": {
+    "name": "StreamArc",
+    "url": "https://github.com/Raveesh1007/StreamArc"
+  },
+  "bugs": {
+    "url": "https://github.com/Raveesh1007/StreamArc/issues"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "5.3.0",
+    "@prb/math": "4.1.0",
+    "@streamarc/evm-utils": "file:../utils",
+    "@streamarc/lockup": "file:../lockup"
+  },
+  "devDependencies": {
+    "forge-std": "github:foundry-rs/forge-std#v1.14.0",
+    "lint-staged": "16.2.6",
+    "murky": "github:dmfxyz/murky#6f67641",
+    "prettier": "3.6.2",
+    "solady": "0.0.208",
+    "solhint": "6.0.1"
+  },
+  "files": [
+    "artifacts",
+    "src",
+    "tests/utils",
+    "CHANGELOG.md",
+    "LICENSE.md",
+    "LICENSE-BUSL.md",
+    "LICENSE-GPL.md"
+  ],
+  "homepage": "https://github.com/Raveesh1007/StreamArc#readme",
+  "keywords": [
+    "airdrops",
+    "airstream",
+    "blockchain",
+    "cryptoasset-streaming",
+    "cryptoassets",
+    "ethereum",
+    "foundry",
+    "instant-airdrop",
+    "lockup",
+    "money-streaming",
+    "real-time-finance",
+    "streamarc",
+    "streamarc-lockup",
+    "smart-contracts",
+    "solidity",
+    "token-distribution",
+    "token-streaming",
+    "token-vesting",
+    "vested-airdrop",
+    "vesting",
+    "web3"
+  ],
+  "peerDependencies": {
+    "@prb/math": "4.1.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Raveesh1007/StreamArc.git",
+    "directory": "airdrops"
+  },
+  "scripts": {
+    "prepack": "../scripts/bash/publish-prepack.sh",
+    "postpack": "../scripts/bash/publish-postpack.sh"
+  }
+}

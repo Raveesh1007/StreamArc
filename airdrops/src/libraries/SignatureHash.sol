@@ -1,0 +1,20 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+pragma solidity >=0.8.22;
+
+/// @title SignatureHash
+/// @notice Library containing the hashes for the EIP-712 and EIP-1271 signatures.
+library SignatureHash {
+    /// @dev The struct type hash for the claim signature.
+    bytes32 public constant CLAIM_TYPEHASH =
+        keccak256("Claim(uint256 index,address recipient,address to,uint128 amount,uint40 validFrom)");
+
+    /// @notice The domain type hash for computing the domain separator.
+    bytes32 public constant DOMAIN_TYPEHASH =
+        keccak256("EIP712Domain(string name,uint256 chainId,address verifyingContract)");
+
+    /// @notice The struct type hash for the attestation signature.
+    bytes32 public constant IDENTITY_TYPEHASH = keccak256("Identity(address recipient,uint40 expireAt)");
+
+    /// @notice The protocol name for the EIP-712 and EIP-1271 signatures.
+    bytes32 public constant PROTOCOL_NAME = keccak256("StreamArc Airdrops Protocol");
+}

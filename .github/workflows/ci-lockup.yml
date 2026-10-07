@@ -1,0 +1,25 @@
+name: "CI: Lockup"
+run-name: "CI Lockup :: ${{ github.event.head_commit.message || github.event.pull_request.title }}"
+
+concurrency:
+  cancel-in-progress: true
+  group: ${{github.workflow}}-${{github.ref}}
+
+on:
+  workflow_dispatch:
+  push: &path_filters
+    branches: [main, staging]
+    paths:
+      - ".github/workflows/ci-lockup.yml"
+      - ".github/workflows/ci-module.yml"
+      - "lockup/**"
+      - "foundry.base.toml"
+      - "package.json"
+  pull_request: *path_filters
+
+jobs:
+  ci:
+    uses: "./.github/workflows/ci-module.yml"
+    secrets: inherit
+    with:
+      module: "lockup"

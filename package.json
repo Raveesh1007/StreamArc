@@ -1,0 +1,40 @@
+{
+  "name": "@streamarc/evm-monorepo",
+  "description": "Monorepo for StreamArc's EVM smart contracts including Lockup, Flow, Airdrops, Bob and Utils protocols",
+  "license": "SEE LICENSE IN LICENSE",
+  "private": true,
+  "version": "1.0.1",
+  "author": {
+    "name": "StreamArc",
+    "url": "https://github.com/Raveesh1007/StreamArc"
+  },
+  "devDependencies": {
+    "husky": "9.1.7",
+    "lint-staged": "16.2.6",
+    "prettier": "3.6.2",
+    "solhint": "6.0.1"
+  },
+  "engines": {
+    "bun": ">=1.3"
+  },
+  "homepage": "https://github.com/Raveesh1007/StreamArc#readme",
+  "keywords": [
+    "blockchain",
+    "ethereum",
+    "evm",
+    "foundry",
+    "monorepo",
+    "streamarc",
+    "smart-contracts",
+    "solidity",
+    "token-streaming",
+    "web3"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Raveesh1007/StreamArc.git"
+  },
+  "scripts": {
+    "setup": "for d in utils lockup flow airdrops; do (cd $d && bun install) || exit 1; done"
+  }
+}

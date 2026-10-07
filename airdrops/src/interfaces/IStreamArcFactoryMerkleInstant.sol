@@ -1,0 +1,67 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+pragma solidity >=0.8.22;
+
+import { MerkleInstant } from "../types/MerkleInstant.sol";
+import { IStreamArcFactoryMerkleBase } from "./IStreamArcFactoryMerkleBase.sol";
+import { IStreamArcMerkleInstant } from "./IStreamArcMerkleInstant.sol";
+
+/// @title IStreamArcFactoryMerkleInstant
+/// @notice A factory that deploys MerkleInstant campaign contracts.
+/// @dev See the documentation in {IStreamArcMerkleInstant}.
+interface IStreamArcFactoryMerkleInstant is IStreamArcFactoryMerkleBase {
+    /*//////////////////////////////////////////////////////////////////////////
+                                       EVENTS
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /// @notice Emitted when a {StreamArcMerkleInstant} campaign is created.
+    event CreateMerkleInstant(
+        IStreamArcMerkleInstant indexed merkleInstant,
+        MerkleInstant.ConstructorParams campaignParams,
+        uint256 aggregateAmount,
+        uint256 recipientCount,
+        address comptroller,
+        uint256 minFeeUSD
+    );
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                READ-ONLY FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /// @notice Computes the deterministic address where {StreamArcMerkleInstant} campaign will be deployed.
+    /// @dev Reverts if the requirements from {createMerkleInstant} are not met.
+    function computeMerkleInstant(
+        address campaignCreator,
+        MerkleInstant.ConstructorParams calldata campaignParams
+    )
+        external
+        view
+        returns (address merkleInstant);
+
+    /*//////////////////////////////////////////////////////////////////////////
+                              STATE-CHANGING FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /// @notice Creates a new MerkleInstant campaign for instant distribution of tokens.
+    ///
+    /// @dev Emits a {CreateMerkleInstant} event.
+    ///
+    /// Notes:
+    /// - The contract is created with CREATE2.
+    /// - The campaign's fee will be set to the min USD fee unless a custom fee is set for `msg.sender`.
+    /// - A value of zero for `campaignParams.expiration` means the campaign does not expire.
+    ///
+    /// Requirements:
+    /// - `campaignParams.token` must not be the forbidden native token.
+    ///
+    /// @param campaignParams Struct encapsulating the {StreamArcMerkleInstant} parameters.
+    /// @param aggregateAmount The total amount of ERC-20 tokens to be distributed to all recipients.
+    /// @param recipientCount The total number of recipient addresses eligible for the airdrop.
+    /// @return merkleInstant The address of the newly created MerkleInstant contract.
+    function createMerkleInstant(
+        MerkleInstant.ConstructorParams calldata campaignParams,
+        uint256 aggregateAmount,
+        uint256 recipientCount
+    )
+        external
+        returns (IStreamArcMerkleInstant merkleInstant);
+}

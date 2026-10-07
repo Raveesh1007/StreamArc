@@ -1,0 +1,20 @@
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity >=0.8.22;
+
+import { IStreamArcComptroller } from "src/interfaces/IStreamArcComptroller.sol";
+
+import { Base_Test } from "../../../Base.t.sol";
+
+contract Constructor_Integration_Concrete_Test is Base_Test {
+    function test_Constructor() public view {
+        assertEq(comptroller.admin(), admin, "admin");
+        assertEq(comptroller.attestor(), attestor, "attestor");
+        assertEq(comptroller.MAX_FEE_USD(), MAX_FEE_USD, "max fee USD");
+        bytes4 expectedMinimalInterfaceId = IStreamArcComptroller.calculateMinFeeWeiFor.selector
+            ^ IStreamArcComptroller.convertUSDFeeToWei.selector ^ IStreamArcComptroller.execute.selector
+            ^ IStreamArcComptroller.getMinFeeUSDFor.selector;
+        assertEq(comptroller.MINIMAL_INTERFACE_ID(), expectedMinimalInterfaceId, "minimal interface ID");
+        assertEq(comptroller.oracle(), address(oracle), "oracle");
+        assertEq(comptroller.VERSION(), "v1.1", "version");
+    }
+}

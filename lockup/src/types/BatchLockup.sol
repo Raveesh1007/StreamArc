@@ -1,0 +1,103 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+pragma solidity >=0.8.22;
+
+import { Lockup } from "./Lockup.sol";
+import { LockupDynamic } from "./LockupDynamic.sol";
+import { LockupLinear } from "./LockupLinear.sol";
+import { LockupPriceGated } from "./LockupPriceGated.sol";
+import { LockupTranched } from "./LockupTranched.sol";
+
+/// @dev Namespace for the structs used in `StreamArcBatchLockup` contract.
+library BatchLockup {
+    /// @notice A struct encapsulating all parameters of {StreamArcLockupDynamic.createWithDurationsLD} except for the
+    /// token.
+    struct CreateWithDurationsLD {
+        address sender;
+        address recipient;
+        uint128 depositAmount;
+        bool cancelable;
+        bool transferable;
+        LockupDynamic.SegmentWithDuration[] segmentsWithDuration;
+        string shape;
+    }
+
+    /// @notice A struct encapsulating all parameters of {StreamArcLockupLinear.createWithDurationsLL} except for the
+    /// token.
+    struct CreateWithDurationsLL {
+        address sender;
+        address recipient;
+        uint128 depositAmount;
+        bool cancelable;
+        bool transferable;
+        LockupLinear.Durations durations;
+        LockupLinear.UnlockAmounts unlockAmounts;
+        uint40 granularity;
+        string shape;
+    }
+
+    /// @notice A struct encapsulating all parameters of {StreamArcLockupTranched.createWithDurationsLT} except for the
+    /// token.
+    struct CreateWithDurationsLT {
+        address sender;
+        address recipient;
+        uint128 depositAmount;
+        bool cancelable;
+        bool transferable;
+        LockupTranched.TrancheWithDuration[] tranchesWithDuration;
+        string shape;
+    }
+
+    /// @notice A struct encapsulating all parameters of {StreamArcLockupDynamic.createWithTimestampsLD} except for the
+    /// token.
+    struct CreateWithTimestampsLD {
+        address sender;
+        address recipient;
+        uint128 depositAmount;
+        bool cancelable;
+        bool transferable;
+        uint40 startTime;
+        LockupDynamic.Segment[] segments;
+        string shape;
+    }
+
+    /// @notice A struct encapsulating all parameters of {StreamArcLockupLinear.createWithTimestampsLL} except for the
+    /// token.
+    struct CreateWithTimestampsLL {
+        address sender;
+        address recipient;
+        uint128 depositAmount;
+        bool cancelable;
+        bool transferable;
+        Lockup.Timestamps timestamps;
+        uint40 cliffTime;
+        LockupLinear.UnlockAmounts unlockAmounts;
+        uint40 granularity;
+        string shape;
+    }
+
+    /// @notice A struct encapsulating all parameters of {StreamArcLockupPriceGated.createWithTimestampsLPG} except for
+    /// the token.
+    struct CreateWithTimestampsLPG {
+        address sender;
+        address recipient;
+        uint128 depositAmount;
+        bool cancelable;
+        bool transferable;
+        Lockup.Timestamps timestamps;
+        LockupPriceGated.UnlockParams unlockParams;
+        string shape;
+    }
+
+    /// @notice A struct encapsulating all parameters of {StreamArcLockupTranched.createWithTimestampsLT} except for the
+    /// token.
+    struct CreateWithTimestampsLT {
+        address sender;
+        address recipient;
+        uint128 depositAmount;
+        bool cancelable;
+        bool transferable;
+        uint40 startTime;
+        LockupTranched.Tranche[] tranches;
+        string shape;
+    }
+}

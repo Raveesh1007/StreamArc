@@ -1,0 +1,25 @@
+name: "CI: Airdrops"
+run-name: "CI Airdrops :: ${{ github.event.head_commit.message || github.event.pull_request.title }}"
+
+concurrency:
+  cancel-in-progress: true
+  group: ${{github.workflow}}-${{github.ref}}
+
+on:
+  workflow_dispatch:
+  push: &path_filters
+    branches: [main, staging]
+    paths:
+      - ".github/workflows/ci-airdrops.yml"
+      - ".github/workflows/ci-module.yml"
+      - "airdrops/**"
+      - "foundry.base.toml"
+      - "package.json"
+  pull_request: *path_filters
+
+jobs:
+  ci:
+    uses: "./.github/workflows/ci-module.yml"
+    secrets: inherit
+    with:
+      module: "airdrops"

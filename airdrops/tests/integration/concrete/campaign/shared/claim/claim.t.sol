@@ -1,0 +1,173 @@
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity >=0.8.22 <0.9.0;
+
+import { Errors } from "src/libraries/Errors.sol";
+import { ClaimType } from "src/types/MerkleBase.sol";
+
+import { Integration_Test } from "../../../../Integration.t.sol";
+
+abstract contract Claim_Integration_Concrete_Test is Integration_Test {
+    function test_RevertGiven_NotDefaultClaimType() external virtual {
+        merkleBase = merkleBaseAttest;
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Errors.StreamArcMerkleBase_UnsupportedClaimType.selector, ClaimType.DEFAULT, ClaimType.ATTEST
+            )
+        );
+        claim();
+    }
+
+    function test_RevertGiven_CampaignStartTimeInFuture() external givenDefaultClaimType {
+        uint40 warpTime = CAMPAIGN_START_TIME - 1 seconds;
+        vm.warp({ newTimestamp: warpTime });
+
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.StreamArcMerkleBase_CampaignNotStarted.selector, warpTime, CAMPAIGN_START_TIME)
+        );
+        claim();
+    }
+
+    function test_RevertGiven_CampaignExpired() external givenDefaultClaimType givenCampaignStartTimeNotInFuture {
+        uint40 warpTime = EXPIRATION + 1 seconds;
+        vm.warp({ newTimestamp: warpTime });
+
+        vm.expectRevert(abi.encodeWithSelector(Errors.StreamArcMerkleBase_CampaignExpired.selector, warpTime, EXPIRATION));
+        claim();
+    }
+
+    function test_RevertGiven_MsgValueLessThanFee()
+        external
+        givenDefaultClaimType
+        givenCampaignStartTimeNotInFuture
+        givenCampaignNotExpired
+    {
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.StreamArcMerkleBase_InsufficientFeePayment.selector, 0, AIRDROP_MIN_FEE_WEI)
+        );
+        claim({
+            msgValue: 0,
+            index: getIndexInMerkleTree(),
+            recipient: users.recipient,
+            amount: CLAIM_AMOUNT,
+            merkleProof: getMerkleProof()
+        });
+    }
+
+    function test_RevertGiven_RecipientClaimed()
+        external
+        givenDefaultClaimType
+        givenCampaignStartTimeNotInFuture
+        givenCampaignNotExpired
+        givenMsgValueNotLessThanFee
+    {
+        claim();
+
+        vm.expectRevert(abi.encodeWithSelector(Errors.StreamArcMerkleBase_IndexClaimed.selector, getIndexInMerkleTree()));
+        claim();
+    }
+
+    function test_RevertWhen_IndexNotValid()
+        external
+        givenDefaultClaimType
+        givenCampaignStartTimeNotInFuture
+        givenCampaignNotExpired
+        givenMsgValueNotLessThanFee
+        givenRecipientNotClaimed
+    {
+        uint256 invalidIndex = 1337;
+
+        vm.expectRevert(Errors.StreamArcMerkleBase_InvalidProof.selector);
+        claim({
+            msgValue: AIRDROP_MIN_FEE_WEI,
+            index: invalidIndex,
+            recipient: users.recipient,
+            amount: CLAIM_AMOUNT,
+            merkleProof: getMerkleProof()
+        });
+    }
+
+    function test_RevertWhen_RecipientNotEligible()
+        external
+        givenDefaultClaimType
+        givenCampaignStartTimeNotInFuture
+        givenCampaignNotExpired
+        givenMsgValueNotLessThanFee
+        givenRecipientNotClaimed
+        whenIndexValid
+    {
+        address invalidRecipient = address(1337);
+
+        setMsgSender(invalidRecipient);
+
+        vm.expectRevert(Errors.StreamArcMerkleBase_InvalidProof.selector);
+        claim({
+            msgValue: AIRDROP_MIN_FEE_WEI,
+            index: getIndexInMerkleTree(),
+            recipient: invalidRecipient,
+            amount: CLAIM_AMOUNT,
+            merkleProof: getMerkleProof()
+        });
+    }
+
+    function test_RevertWhen_AmountNotValid()
+        external
+        givenDefaultClaimType
+        givenCampaignStartTimeNotInFuture
+        givenCampaignNotExpired
+        givenMsgValueNotLessThanFee
+        givenRecipientNotClaimed
+        whenIndexValid
+        whenRecipientEligible
+    {
+        uint128 invalidAmount = 1337;
+
+        vm.expectRevert(Errors.StreamArcMerkleBase_InvalidProof.selector);
+        claim({
+            msgValue: AIRDROP_MIN_FEE_WEI,
+            index: getIndexInMerkleTree(),
+            recipient: users.recipient,
+            amount: invalidAmount,
+            merkleProof: getMerkleProof()
+        });
+    }
+
+    function test_RevertWhen_MerkleProofNotValid()
+        external
+        givenDefaultClaimType
+        givenCampaignStartTimeNotInFuture
+        givenCampaignNotExpired
+        givenMsgValueNotLessThanFee
+        givenRecipientNotClaimed
+        whenIndexValid
+        whenRecipientEligible
+        whenAmountValid
+    {
+        vm.expectRevert(Errors.StreamArcMerkleBase_InvalidProof.selector);
+        claim({
+            msgValue: AIRDROP_MIN_FEE_WEI,
+            index: getIndexInMerkleTree(),
+            recipient: users.recipient,
+            amount: CLAIM_AMOUNT,
+            merkleProof: getMerkleProof(users.unknownRecipient)
+        });
+    }
+
+    /// @dev Since the implementation of `claim()` differs in each Merkle campaign, we declare this virtual dummy test.
+    /// The child contracts implement it.
+    function test_WhenMerkleProofValid()
+        external
+        virtual
+        givenDefaultClaimType
+        givenCampaignStartTimeNotInFuture
+        givenCampaignNotExpired
+        givenMsgValueNotLessThanFee
+        givenRecipientNotClaimed
+        whenIndexValid
+        whenRecipientEligible
+        whenAmountValid
+    {
+        // The child contract must check that the claim event is emitted.
+        // It should mark the index as claimed.
+        // It should transfer the fee from the caller address to the comptroller.
+    }
+}

@@ -1,0 +1,20 @@
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity >=0.8.22;
+
+import { Base_Test } from "../../../Base.t.sol";
+
+contract Constructor_Integration_Concrete_Test is Base_Test {
+    function test_Constructor() public view {
+        // It should set the state variables.
+        assertEq(roleAdminableMock.admin(), admin, "admin");
+        assertEq(roleAdminableMock.ATTESTOR_MANAGER_ROLE(), ATTESTOR_MANAGER_ROLE, "attestor manager role");
+        assertEq(roleAdminableMock.FEE_COLLECTOR_ROLE(), FEE_COLLECTOR_ROLE, "fee collector role");
+        assertEq(roleAdminableMock.FEE_MANAGEMENT_ROLE(), FEE_MANAGEMENT_ROLE, "fee management role");
+
+        // It should show the accountant has the role.
+        assertTrue(
+            roleAdminableMock.hasRoleOrIsAdmin(roleAdminableMock.FEE_COLLECTOR_ROLE(), users.accountant),
+            "accountant role"
+        );
+    }
+}

@@ -1,0 +1,132 @@
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity >=0.8.22 <0.9.0;
+
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IStreamArcComptroller } from "@streamarc/evm-utils/src/interfaces/IStreamArcComptroller.sol";
+
+import { IStreamArcMerkleBase } from "src/interfaces/IStreamArcMerkleBase.sol";
+import { LeafData } from "./../../utils/MerkleBuilder.sol";
+import { Fork_Test } from "./../Fork.t.sol";
+
+abstract contract MerkleBase_Fork_Test is Fork_Test {
+    /*//////////////////////////////////////////////////////////////////////////
+                                      STRUCTS
+    //////////////////////////////////////////////////////////////////////////*/
+
+    struct Params {
+        address campaignCreator;
+        uint40 expiration;
+        LeafData[] leavesData;
+        uint256 leafIndex;
+    }
+
+    struct Vars {
+        uint256[] leaves;
+        LeafData[] leavesData;
+        LeafData leafToClaim;
+        uint256 initialAdminBalance;
+        uint128 aggregateAmount;
+        uint128 clawbackAmount;
+        address expectedMerkleCampaign;
+        bytes32[] merkleProof;
+        bytes32 merkleRoot;
+        uint256 minFeeUSD;
+        uint256 minFeeWei;
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                  STATE VARIABLES
+    //////////////////////////////////////////////////////////////////////////*/
+
+    Vars internal vars;
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                    CONSTRUCTOR
+    //////////////////////////////////////////////////////////////////////////*/
+
+    constructor(IERC20 tokenAddress) Fork_Test(tokenAddress) { }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                  CREATE-CAMPAIGN
+    //////////////////////////////////////////////////////////////////////////*/
+
+    function preCreateCampaign(Params memory params) internal {
+        // Some tokens like USDC use a transparent proxy, and the proxy admin is not allowed to call implementation
+        // functions through the proxy. So we need to exclude it from both campaign creator and airdrop recipient.
+        address tokenAdmin = getTokenProxyAdmin(address(FORK_TOKEN));
+
+        vm.assume(
+            params.campaignCreator != address(0) && params.campaignCreator != address(factoryMerkleBase)
+                && params.campaignCreator != tokenAdmin
+        );
+        vm.assume(params.leavesData.length > 0);
+
+        assumeNoBlacklisted({ token: address(FORK_TOKEN), addr: params.campaignCreator });
+        params.leafIndex = _bound(params.leafIndex, 0, params.leavesData.length - 1);
+
+        // The expiration must be either zero or greater than the block timestamp.
+        if (params.expiration != 0) {
+            params.expiration = boundUint40(params.expiration, getBlockTimestamp() + 1 seconds, MAX_UNIX_TIMESTAMP);
+        }
+
+        // Exclude the token admin and the factory contract from being the recipient. In case of factory contract,
+        // the fee accrued may not be equal to the sum of all `msg.value`.
+        address[] memory excludedAddresses = new address[](2);
+        excludedAddresses[0] = address(factoryMerkleBase);
+        excludedAddresses[1] = tokenAdmin;
+
+        // Fuzz the leaves data, construct the Merkle tree and compute the aggregate amount and Merkle root.
+        (vars.aggregateAmount, vars.merkleRoot) =
+            fuzzMerkleDataAndComputeRoot(vars.leaves, vars.leavesData, params.leavesData, excludedAddresses);
+
+        // Make the campaign creator as the caller.
+        setMsgSender(params.campaignCreator);
+
+        // Load the min fee in USD.
+        vars.minFeeUSD = comptroller.getMinFeeUSD({ protocol: IStreamArcComptroller.Protocol.Airdrops });
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                       CLAIM
+    //////////////////////////////////////////////////////////////////////////*/
+
+    function preClaim(Params memory params) internal {
+        // Fund the Merkle contract.
+        deal({ token: address(FORK_TOKEN), to: address(merkleBase), give: vars.aggregateAmount });
+
+        vars.leafToClaim = params.leavesData[params.leafIndex];
+
+        assumeNoBlacklisted({ token: address(FORK_TOKEN), addr: vars.leafToClaim.recipient });
+
+        // Make the recipient as the caller.
+        setMsgSender(vars.leafToClaim.recipient);
+
+        assertFalse(merkleBase.hasClaimed(vars.leafToClaim.index));
+
+        vars.merkleProof = computeMerkleProof(vars.leafToClaim, vars.leaves);
+        vars.minFeeWei = comptroller.calculateMinFeeWei({ protocol: IStreamArcComptroller.Protocol.Airdrops });
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                      CLAWBACK
+    //////////////////////////////////////////////////////////////////////////*/
+
+    function testClawback(Params memory params) internal {
+        // Make the campaign creator as the caller.
+        setMsgSender(params.campaignCreator);
+
+        if (params.expiration > 0) {
+            vars.clawbackAmount = uint128(FORK_TOKEN.balanceOf(address(merkleBase)));
+            vm.warp({ newTimestamp: params.expiration + 1 seconds });
+
+            expectCallToTransfer({ token: FORK_TOKEN, to: params.campaignCreator, value: vars.clawbackAmount });
+            vm.expectEmit({ emitter: address(merkleBase) });
+            emit IStreamArcMerkleBase.Clawback({
+                to: params.campaignCreator,
+                admin: params.campaignCreator,
+                amount: vars.clawbackAmount
+            });
+            merkleBase.clawback({ to: params.campaignCreator, amount: vars.clawbackAmount });
+        }
+    }
+}

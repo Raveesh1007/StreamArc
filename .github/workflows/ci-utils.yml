@@ -1,0 +1,26 @@
+name: "CI: Utils"
+run-name: "CI Utils :: ${{ github.event.head_commit.message || github.event.pull_request.title }}"
+
+concurrency:
+  cancel-in-progress: true
+  group: ${{github.workflow}}-${{github.ref}}
+
+on:
+  workflow_dispatch:
+  push: &path_filters
+    branches: [main, staging]
+    paths:
+      - ".github/workflows/ci-utils.yml"
+      - ".github/workflows/ci-module.yml"
+      - "utils/**"
+      - "foundry.base.toml"
+      - "package.json"
+  pull_request: *path_filters
+
+jobs:
+  ci:
+    uses: "./.github/workflows/ci-module.yml"
+    secrets: inherit
+    with:
+      exclude-unit-tests: true
+      module: "utils"

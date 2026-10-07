@@ -1,0 +1,30 @@
+# directories
+artifacts/
+artifacts-*/
+broadcast/
+cache/
+cache_hardhat-zk/
+coverage/
+deployments/
+deployments-*/
+docs/
+node_modules/
+out/
+out-*/
+repomix/
+typechain-types/
+
+# files
+**/.claude/settings.local.json
+.env
+*.log
+.DS_Store
+.pnp.*
+bun.lock
+bun.lockb
+deployments.md
+lcov.info
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+

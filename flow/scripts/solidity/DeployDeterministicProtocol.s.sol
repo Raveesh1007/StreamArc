@@ -1,0 +1,35 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+pragma solidity >=0.8.22;
+
+import { BaseScript } from "@streamarc/evm-utils/src/tests/BaseScript.sol";
+
+import { FlowNFTDescriptor } from "../../src/FlowNFTDescriptor.sol";
+import { StreamArcFlow } from "../../src/StreamArcFlow.sol";
+
+import { FlowNFTDescriptorAddresses } from "./FlowNFTDescriptorAddresses.sol";
+
+/// @notice Deploys the protocol at a deterministic addresses across chains.
+/// @dev Reverts if the contract has already been deployed.
+contract DeployDeterministicProtocol is BaseScript, FlowNFTDescriptorAddresses {
+    string internal constant DEPLOYMENT_VERSION = "3.0.0";
+
+    function run() public broadcast returns (StreamArcFlow flow, FlowNFTDescriptor nftDescriptor) {
+        // If the contract is not already deployed, deploy it.
+        if (nftDescriptorAddress() == address(0)) {
+            // Use just the version as salt as we want to deploy at the same address across all chains.
+            bytes32 nftDescriptorSalt = bytes32(abi.encodePacked(getVersion()));
+
+            nftDescriptor = new FlowNFTDescriptor{ salt: nftDescriptorSalt }();
+        }
+        // Otherwise, use the address of the existing contract.
+        else {
+            nftDescriptor = FlowNFTDescriptor(nftDescriptorAddress());
+        }
+
+        flow = new StreamArcFlow{ salt: SALT }(getComptroller(), address(nftDescriptor));
+    }
+
+    function getVersion() public pure override returns (string memory) {
+        return DEPLOYMENT_VERSION;
+    }
+}

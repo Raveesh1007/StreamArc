@@ -1,0 +1,313 @@
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity >=0.8.22;
+
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { UD60x18, ud60x18 } from "@prb/math/src/UD60x18.sol";
+import { Lockup } from "@streamarc/lockup/src/types/Lockup.sol";
+import { LockupTranched } from "@streamarc/lockup/src/types/LockupTranched.sol";
+
+import { StreamArcMerkleBase } from "./abstracts/StreamArcMerkleBase.sol";
+import { StreamArcMerkleLockup } from "./abstracts/StreamArcMerkleLockup.sol";
+import { StreamArcMerkleSignature } from "./abstracts/StreamArcMerkleSignature.sol";
+import { IStreamArcMerkleLT } from "./interfaces/IStreamArcMerkleLT.sol";
+import { ClaimType, MerkleBase } from "./types/MerkleBase.sol";
+import { MerkleLockup } from "./types/MerkleLockup.sol";
+import { MerkleLT } from "./types/MerkleLT.sol";
+
+/*
+
+███████╗ █████╗ ██████╗ ██╗     ██╗███████╗██████╗
+██╔════╝██╔══██╗██╔══██╗██║     ██║██╔════╝██╔══██╗
+███████╗███████║██████╔╝██║     ██║█████╗  ██████╔╝
+╚════██║██╔══██║██╔══██╗██║     ██║██╔══╝  ██╔══██╗
+███████║██║  ██║██████╔╝███████╗██║███████╗██║  ██║
+╚══════╝╚═╝  ╚═╝╚═════╝ ╚══════╝╚═╝╚══════╝╚═╝  ╚═╝
+
+███╗   ███╗███████╗██████╗ ██╗  ██╗██╗     ███████╗    ██╗     ████████╗
+████╗ ████║██╔════╝██╔══██╗██║ ██╔╝██║     ██╔════╝    ██║     ╚══██╔══╝
+██╔████╔██║█████╗  ██████╔╝█████╔╝ ██║     █████╗      ██║        ██║
+██║╚██╔╝██║██╔══╝  ██╔══██╗██╔═██╗ ██║     ██╔══╝      ██║        ██║
+██║ ╚═╝ ██║███████╗██║  ██║██║  ██╗███████╗███████╗    ███████╗   ██║
+╚═╝     ╚═╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝    ╚══════╝   ╚═╝
+
+*/
+
+/// @title StreamArcMerkleLT
+/// @notice See the documentation in {IStreamArcMerkleLT}.
+contract StreamArcMerkleLT is
+    IStreamArcMerkleLT, // 4 inherited components
+    StreamArcMerkleLockup, // 5 inherited components
+    StreamArcMerkleSignature // 5 inherited components
+{
+    using SafeERC20 for IERC20;
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                  STATE VARIABLES
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /// @inheritdoc IStreamArcMerkleLT
+    uint40 public immutable override VESTING_START_TIME;
+
+    /// @dev The tranches with their respective unlock percentages and durations.
+    MerkleLT.TrancheWithPercentage[] private _tranchesWithPercentages;
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                    CONSTRUCTOR
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /// @dev Constructs the contract by initializing the immutable state variables, and max approving the Lockup
+    /// contract.
+    constructor(
+        MerkleLT.ConstructorParams memory campaignParams,
+        address campaignCreator,
+        address comptroller
+    )
+        StreamArcMerkleBase(MerkleBase.ConstructorParams({
+                campaignCreator: campaignCreator,
+                campaignName: campaignParams.campaignName,
+                campaignStartTime: campaignParams.campaignStartTime,
+                claimType: campaignParams.claimType,
+                comptroller: comptroller,
+                expiration: campaignParams.expiration,
+                initialAdmin: campaignParams.initialAdmin,
+                ipfsCID: campaignParams.ipfsCID,
+                merkleRoot: campaignParams.merkleRoot,
+                token: campaignParams.token
+            }))
+        StreamArcMerkleLockup(MerkleLockup.ConstructorParams({
+                cancelable: campaignParams.cancelable,
+                lockup: campaignParams.lockup,
+                shape: campaignParams.shape,
+                transferable: campaignParams.transferable
+            }))
+    {
+        VESTING_START_TIME = campaignParams.vestingStartTime;
+
+        // Save the tranches in the contract state.
+        uint256 count = campaignParams.tranchesWithPercentages.length;
+        for (uint256 i = 0; i < count; ++i) {
+            _tranchesWithPercentages.push(campaignParams.tranchesWithPercentages[i]);
+        }
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                          USER-FACING READ-ONLY FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /// @inheritdoc IStreamArcMerkleLT
+    function tranchesWithPercentages() external view override returns (MerkleLT.TrancheWithPercentage[] memory) {
+        return _tranchesWithPercentages;
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                        USER-FACING STATE-CHANGING FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /// @inheritdoc IStreamArcMerkleLT
+    function claim(
+        uint256 index,
+        address recipient,
+        uint128 amount,
+        bytes32[] calldata merkleProof
+    )
+        external
+        payable
+        override
+        revertIfNot(ClaimType.DEFAULT)
+    {
+        // Check, Effect and Interaction: Pre-process the claim parameters on behalf of the recipient.
+        _preProcessClaim(index, recipient, amount, merkleProof);
+
+        // Check, Effect and Interaction: Post-process the claim parameters on behalf of the recipient.
+        _postProcessClaim({ index: index, recipient: recipient, to: recipient, amount: amount, viaSig: false });
+    }
+
+    /// @inheritdoc IStreamArcMerkleLT
+    function claimTo(
+        uint256 index,
+        address to,
+        uint128 amount,
+        bytes32[] calldata merkleProof
+    )
+        external
+        payable
+        override
+        revertIfNot(ClaimType.DEFAULT)
+        notZeroAddress(to)
+    {
+        // Check, Effect and Interaction: Pre-process the claim parameters on behalf of `msg.sender`.
+        _preProcessClaim({ index: index, recipient: msg.sender, amount: amount, merkleProof: merkleProof });
+
+        // Check, Effect and Interaction: Post-process the claim parameters on behalf of `msg.sender`.
+        _postProcessClaim({ index: index, recipient: msg.sender, to: to, amount: amount, viaSig: false });
+    }
+
+    /// @inheritdoc IStreamArcMerkleLT
+    function claimViaAttestation(
+        uint256 index,
+        address to,
+        uint128 amount,
+        uint40 expireAt,
+        bytes32[] calldata merkleProof,
+        bytes calldata attestation
+    )
+        external
+        payable
+        override
+        revertIfNot(ClaimType.ATTEST)
+        notZeroAddress(to)
+    {
+        // Check: the attestation signature is valid and the recovered signer matches the attestor.
+        _verifyAttestationSignature(msg.sender, expireAt, attestation);
+
+        // Check, Effect and Interaction: Pre-process the claim parameters on behalf of `msg.sender`.
+        _preProcessClaim({ index: index, recipient: msg.sender, amount: amount, merkleProof: merkleProof });
+
+        // Check, Effect and Interaction: Post-process the claim parameters on behalf of `msg.sender`.
+        _postProcessClaim({ index: index, recipient: msg.sender, to: to, amount: amount, viaSig: false });
+    }
+
+    /// @inheritdoc IStreamArcMerkleLT
+    function claimViaSig(
+        uint256 index,
+        address recipient,
+        address to,
+        uint128 amount,
+        uint40 validFrom,
+        bytes32[] calldata merkleProof,
+        bytes calldata signature
+    )
+        external
+        payable
+        override
+        revertIfNot(ClaimType.DEFAULT)
+        notZeroAddress(to)
+    {
+        // Check: the signature is valid and the recovered signer matches the recipient.
+        _verifyClaimSignature(index, recipient, to, amount, validFrom, signature);
+
+        // Check, Effect and Interaction: Pre-process the claim parameters on behalf of the recipient.
+        _preProcessClaim(index, recipient, amount, merkleProof);
+
+        // Check, Effect and Interaction: Post-process the claim parameters on behalf of the recipient.
+        _postProcessClaim({ index: index, recipient: recipient, to: to, amount: amount, viaSig: true });
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                            PRIVATE READ-ONLY FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /// @dev Calculates the vesting start time, and the tranches based on the claim amount and the unlock percentages
+    /// for each tranche.
+    function _calculateStartTimeAndTranches(uint128 claimAmount)
+        private
+        view
+        returns (uint40 vestingStartTime, LockupTranched.Tranche[] memory tranches)
+    {
+        // Calculate the vesting start time. Zero is a sentinel value for `block.timestamp`.
+        if (VESTING_START_TIME == 0) {
+            vestingStartTime = uint40(block.timestamp);
+        } else {
+            vestingStartTime = VESTING_START_TIME;
+        }
+
+        // Load the tranches in memory (to save gas).
+        MerkleLT.TrancheWithPercentage[] memory tranchesWithPct = _tranchesWithPercentages;
+
+        // Declare the variables needed for calculation.
+        uint128 calculatedAmountsSum;
+        UD60x18 claimAmountUD = ud60x18(claimAmount);
+        uint256 trancheCount = tranchesWithPct.length;
+        tranches = new LockupTranched.Tranche[](trancheCount);
+
+        unchecked {
+            // Convert the tranche's percentage from the `UD2x18` to the `UD60x18` type.
+            UD60x18 percentage = (tranchesWithPct[0].unlockPercentage).intoUD60x18();
+
+            // Calculate the tranche's amount by multiplying the claim amount by the unlock percentage.
+            uint128 calculatedAmount = claimAmountUD.mul(percentage).intoUint128();
+
+            // Add the calculated tranche amount.
+            calculatedAmountsSum += calculatedAmount;
+
+            // The first tranche is precomputed because it is needed in the for loop below.
+            tranches[0] = LockupTranched.Tranche({
+                amount: calculatedAmount,
+                timestamp: vestingStartTime + tranchesWithPct[0].duration
+            });
+
+            // Iterate over each tranche to calculate its timestamp and unlock amount.
+            for (uint256 i = 1; i < trancheCount; ++i) {
+                percentage = (tranchesWithPct[i].unlockPercentage).intoUD60x18();
+                calculatedAmount = claimAmountUD.mul(percentage).intoUint128();
+                calculatedAmountsSum += calculatedAmount;
+
+                tranches[i] = LockupTranched.Tranche({
+                    amount: calculatedAmount,
+                    timestamp: tranches[i - 1].timestamp + tranchesWithPct[i].duration
+                });
+            }
+        }
+
+        // Since there can be rounding errors, the last tranche amount needs to be adjusted to ensure the sum of all
+        // tranche amounts equals the claim amount.
+        if (calculatedAmountsSum < claimAmount) {
+            unchecked {
+                tranches[trancheCount - 1].amount += claimAmount - calculatedAmountsSum;
+            }
+        }
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                          PRIVATE STATE-CHANGING FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /// @dev Post-processes the claim execution by creating the stream or transferring the tokens directly and emitting
+    /// an event.
+    function _postProcessClaim(uint256 index, address recipient, address to, uint128 amount, bool viaSig) private {
+        // Declare the variables needed for the stream creation.
+        Lockup.Timestamps memory timestamps;
+        LockupTranched.Tranche[] memory tranches;
+
+        // Calculate the tranches based on the unlock percentages.
+        (timestamps.start, tranches) = _calculateStartTimeAndTranches(amount);
+
+        // Calculate the stream's end time.
+        unchecked {
+            timestamps.end = tranches[tranches.length - 1].timestamp;
+        }
+
+        // If the stream end time is not in the future, transfer the amount directly to the `to` address.
+        if (timestamps.end <= block.timestamp) {
+            // Interaction: transfer the tokens to the `to` address.
+            TOKEN.safeTransfer(to, amount);
+
+            // Emit claim event.
+            emit ClaimLTWithTransfer(index, recipient, amount, to, viaSig);
+        }
+        // Otherwise, create the Lockup stream.
+        else {
+            // Safe Interaction: create the stream with `to` as the stream recipient.
+            uint256 streamId = STREAMARC_LOCKUP.createWithTimestampsLT(
+                Lockup.CreateWithTimestamps({
+                    sender: admin,
+                    recipient: to,
+                    depositAmount: amount,
+                    token: TOKEN,
+                    cancelable: STREAM_CANCELABLE,
+                    transferable: STREAM_TRANSFERABLE,
+                    timestamps: timestamps,
+                    shape: streamShape
+                }),
+                tranches
+            );
+
+            // Effect: push the stream ID into the claimed streams array.
+            _claimedStreams[recipient].push(streamId);
+
+            // Emit claim event.
+            emit ClaimLTWithVesting(index, recipient, amount, streamId, to, viaSig);
+        }
+    }
+}

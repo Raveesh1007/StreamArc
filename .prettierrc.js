@@ -1,0 +1,9 @@
+/** @type {import("prettier").Config} */
+module.exports = {
+  printWidth: 120,
+  trailingComma: "all",
+  overrides: [
+    { files: "*.md", options: { proseWrap: "always" } },
+    { files: "*.svg", options: { parser: "html" } },
+  ],
+};

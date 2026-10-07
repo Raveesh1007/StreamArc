@@ -1,0 +1,116 @@
+# StreamArc Flow [![GitHub Actions][gha-badge]][gha] [![Coverage][codecov-badge]][codecov] [![Foundry][foundry-badge]][foundry] [![Twitter][twitter-badge]][twitter]
+
+> [!IMPORTANT]
+>
+> The license changed from BUSL-1.1 to GPL on 2026-07-13. Read the
+> [announcement on X](https://x.com/PaulRBerg/status/2076695661303443667) for details.
+
+In-depth documentation is available at [docs.streamarc.com](https://github.com/Raveesh1007/StreamArc).
+
+## Background
+
+StreamArc Flow is a debt tracking protocol that tracks tokens owed between two parties, enabling open-ended token
+streaming. A Flow stream is characterized by its rate per second (rps). The relationship between the amount owed and
+time elapsed is linear and defined as:
+
+```math
+\text{amount owed} = rps \cdot \text{elapsed time}
+```
+
+StreamArc Flow can be used in several areas of everyday finance, such as payroll, subscriptions, grant distributions,
+insurance premiums, loans interest, token ESOPs etc. If you are looking for vesting and airdrops, please refer to our
+[Lockup](../lockup/) protocol.
+
+## Features
+
+1. **Open-ended:** A stream can be created with no specific end time. It runs indefinitely until it is paused or voided.
+2. **Top-ups:** No upfront deposit requirements. A stream can be funded with any amount, at any time, by anyone, in full
+   or partially.
+3. **Pause:** A stream can be paused by the sender and can later be restarted without losing track of previously accrued
+   debt.
+4. **Void:** A voided stream cannot be restarted anymore. Voiding an insolvent stream forfeits the uncovered debt.
+   Either the sender or the recipient can void a stream at any time.
+5. **Refund:** Unstreamed amount can be refunded back to the sender at any time.
+6. **Withdraw:** A publicly callable function as long as `to` is set to the recipient. A stream's recipient is allowed
+   to withdraw funds to any address.
+
+## Install
+
+### Node.js
+
+This is the recommended approach.
+
+Install Flow using your favorite package manager, e.g. with Bun:
+
+```shell
+bun add @streamarc/flow
+```
+
+### Git Submodules
+
+This installation method is not recommended, but it is available for those who prefer it.
+
+Install the monorepo and its dependencies using Forge:
+
+```shell
+forge install Raveesh1007/StreamArc@flow@v3.0.1 OpenZeppelin/openzeppelin-contracts@v5.3.0 PaulRBerg/prb-math@v4.1.0
+```
+
+Then, add the following remappings in `remappings.txt`:
+
+```text
+@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/
+@prb/math/=lib/prb-math/
+@streamarc/evm-utils/=lib/evm-monorepo/utils/
+@streamarc/flow/=lib/evm-monorepo/flow/
+```
+
+## Usage
+
+This is just a glimpse of StreamArc Flow. For more guides and examples, see the [documentation](https://github.com/Raveesh1007/StreamArc).
+
+```solidity
+import { IStreamArcFlow } from "@streamarc/flow/src/interfaces/IStreamArcFlow.sol";
+
+contract MyContract {
+  IStreamArcFlow immutable flow;
+
+  function doSomethingWithFlow(uint256 streamId) external {
+    uint128 totalDebt = flow.totalDebtOf(streamId);
+    // ...
+  }
+}
+```
+
+## Deployments
+
+The list of all deployment addresses can be found [here](https://github.com/Raveesh1007/StreamArc).
+
+## Security
+
+The codebase has undergone rigorous audits by leading security experts from Cantina, as well as independent auditors.
+For a comprehensive list of all audits conducted, please click [here](https://github.com/streamarc-labs/audits).
+
+For any security-related concerns, please refer to the [SECURITY](../SECURITY.md) policy.
+
+## Contributing
+
+This repository is **not accepting pull requests of any kind**, including changes to code comments. Comment-only edits
+can change the compiled bytecode, and the source on `main` must remain byte-for-byte verifiable against the
+[deployed addresses](https://github.com/Raveesh1007/StreamArc). PRs will be closed without review.
+
+For questions or informal feedback, [open an issue](https://github.com/Raveesh1007/StreamArc/issues/new) or
+[start a discussion](https://github.com/Raveesh1007/StreamArc/discussions/new/choose).
+
+## License
+
+See [LICENSE.md](../LICENSE.md).
+
+[codecov]: https://app.codecov.io/gh/Raveesh1007/StreamArc
+[codecov-badge]: https://codecov.io/gh/Raveesh1007/StreamArc/branch/main/graph/badge.svg
+[foundry]: https://getfoundry.sh
+[foundry-badge]: https://img.shields.io/badge/Built%20with-Foundry-FFDB1C.svg
+[gha]: https://github.com/Raveesh1007/StreamArc/actions
+[gha-badge]: https://github.com/Raveesh1007/StreamArc/actions/workflows/ci-flow.yml/badge.svg
+[twitter]: https://x.com/StreamArc
+[twitter-badge]: https://img.shields.io/twitter/follow/StreamArc

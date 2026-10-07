@@ -1,0 +1,859 @@
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity >=0.8.22 <0.9.0;
+
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { ud2x18 } from "@prb/math/src/UD2x18.sol";
+import { ud, UD60x18 } from "@prb/math/src/UD60x18.sol";
+
+import { ERC1271WalletMock } from "@streamarc/evm-utils/src/mocks/ERC1271WalletMock.sol";
+import { Noop } from "@streamarc/evm-utils/src/mocks/Noop.sol";
+import { BaseTest as EvmUtilsBase } from "@streamarc/evm-utils/src/tests/BaseTest.sol";
+import { IStreamArcLockup } from "@streamarc/lockup/src/interfaces/IStreamArcLockup.sol";
+import { LockupNFTDescriptor } from "@streamarc/lockup/src/LockupNFTDescriptor.sol";
+import { StreamArcLockup } from "@streamarc/lockup/src/StreamArcLockup.sol";
+import { LockupTranched } from "@streamarc/lockup/src/types/LockupTranched.sol";
+import { IStreamArcFactoryMerkleBase } from "src/interfaces/IStreamArcFactoryMerkleBase.sol";
+import { IStreamArcFactoryMerkleExecute } from "src/interfaces/IStreamArcFactoryMerkleExecute.sol";
+import { IStreamArcFactoryMerkleInstant } from "src/interfaces/IStreamArcFactoryMerkleInstant.sol";
+import { IStreamArcFactoryMerkleLL } from "src/interfaces/IStreamArcFactoryMerkleLL.sol";
+import { IStreamArcFactoryMerkleLT } from "src/interfaces/IStreamArcFactoryMerkleLT.sol";
+import { IStreamArcFactoryMerkleVCA } from "src/interfaces/IStreamArcFactoryMerkleVCA.sol";
+import { IStreamArcMerkleBase } from "src/interfaces/IStreamArcMerkleBase.sol";
+import { IStreamArcMerkleExecute } from "src/interfaces/IStreamArcMerkleExecute.sol";
+import { IStreamArcMerkleInstant } from "src/interfaces/IStreamArcMerkleInstant.sol";
+import { IStreamArcMerkleLL } from "src/interfaces/IStreamArcMerkleLL.sol";
+import { IStreamArcMerkleLT } from "src/interfaces/IStreamArcMerkleLT.sol";
+import { IStreamArcMerkleVCA } from "src/interfaces/IStreamArcMerkleVCA.sol";
+import { StreamArcFactoryMerkleExecute } from "src/StreamArcFactoryMerkleExecute.sol";
+import { StreamArcFactoryMerkleInstant } from "src/StreamArcFactoryMerkleInstant.sol";
+import { StreamArcFactoryMerkleLL } from "src/StreamArcFactoryMerkleLL.sol";
+import { StreamArcFactoryMerkleLT } from "src/StreamArcFactoryMerkleLT.sol";
+import { StreamArcFactoryMerkleVCA } from "src/StreamArcFactoryMerkleVCA.sol";
+import { StreamArcMerkleExecute } from "src/StreamArcMerkleExecute.sol";
+import { StreamArcMerkleInstant } from "src/StreamArcMerkleInstant.sol";
+import { StreamArcMerkleLL } from "src/StreamArcMerkleLL.sol";
+import { StreamArcMerkleLT } from "src/StreamArcMerkleLT.sol";
+import { StreamArcMerkleVCA } from "src/StreamArcMerkleVCA.sol";
+import { ClaimType } from "src/types/MerkleBase.sol";
+import { MerkleExecute } from "src/types/MerkleExecute.sol";
+import { MerkleInstant } from "src/types/MerkleInstant.sol";
+import { MerkleLL } from "src/types/MerkleLL.sol";
+import { MerkleLT } from "src/types/MerkleLT.sol";
+import { MerkleVCA } from "src/types/MerkleVCA.sol";
+import { MockStaking } from "./mocks/MockStaking.sol";
+import { Assertions } from "./utils/Assertions.sol";
+import { DeployOptimized } from "./utils/DeployOptimized.sol";
+import { Fuzzers } from "./utils/Fuzzers.sol";
+import { LeafData } from "./utils/MerkleBuilder.sol";
+import { Modifiers } from "./utils/Modifiers.sol";
+import { Users } from "./utils/Types.sol";
+import { Utils } from "./utils/Utils.sol";
+
+/// @notice Base test contract with common logic needed by all tests.
+abstract contract Base_Test is Assertions, Modifiers, DeployOptimized, Fuzzers, Utils {
+    /*//////////////////////////////////////////////////////////////////////////
+                                     VARIABLES
+    //////////////////////////////////////////////////////////////////////////*/
+
+    bytes internal eip712Signature;
+    uint256 internal recipientPrivateKey;
+    Users internal users;
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                   TEST CONTRACTS
+    //////////////////////////////////////////////////////////////////////////*/
+
+    IStreamArcLockup internal lockup;
+    MockStaking internal mockStaking;
+    /// @dev A test contract meant to be overridden by the implementing Merkle contracts.
+    IStreamArcMerkleBase internal merkleBase;
+    /// @dev A test contract meant to be overridden by the implementing FactoryMerkle contracts.
+    IStreamArcFactoryMerkleBase internal factoryMerkleBase;
+    IStreamArcFactoryMerkleExecute internal factoryMerkleExecute;
+    IStreamArcFactoryMerkleInstant internal factoryMerkleInstant;
+    IStreamArcFactoryMerkleLL internal factoryMerkleLL;
+    IStreamArcFactoryMerkleLT internal factoryMerkleLT;
+    IStreamArcFactoryMerkleVCA internal factoryMerkleVCA;
+    IStreamArcMerkleExecute internal merkleExecute;
+    IStreamArcMerkleInstant internal merkleInstant;
+    IStreamArcMerkleLL internal merkleLL;
+    IStreamArcMerkleLT internal merkleLT;
+    IStreamArcMerkleVCA internal merkleVCA;
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                  SET-UP FUNCTION
+    //////////////////////////////////////////////////////////////////////////*/
+
+    function setUp() public virtual override {
+        EvmUtilsBase.setUp();
+
+        // Deploy the Lockup contract.
+        address nftDescriptor = address(new LockupNFTDescriptor());
+        lockup = new StreamArcLockup(address(comptroller), nftDescriptor);
+
+        // Deploy the mock staking contract.
+        mockStaking = new MockStaking(dai);
+        vm.label({ account: address(mockStaking), newLabel: "MockStaking" });
+
+        // Deploy the factories.
+        deployFactoriesConditionally();
+
+        // Create users for testing.
+        createTestUsers();
+
+        // Initialize the Merkle tree.
+        initMerkleTree();
+
+        // Set the variables in Modifiers contract.
+        setVariables(users);
+
+        // Set sender as the default caller for the tests.
+        setMsgSender(users.sender);
+
+        // Warp to Feb 1, 2025 at 00:00 UTC to provide a more realistic testing environment.
+        vm.warp({ newTimestamp: FEB_1_2025 });
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                      HELPERS
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /// @dev Create users for testing and assign roles if applicable.
+    function createTestUsers() internal {
+        address[] memory spenders = new address[](5);
+        spenders[0] = address(factoryMerkleExecute);
+        spenders[1] = address(factoryMerkleInstant);
+        spenders[2] = address(factoryMerkleLL);
+        spenders[3] = address(factoryMerkleLT);
+        spenders[4] = address(factoryMerkleVCA);
+
+        // Create recipient and store private key since it is used to claim using signature.
+        (users.recipient, recipientPrivateKey) = createUserAndKey("Recipient", spenders);
+
+        // Create a new recipient as an ERC-1271 smart contract with recipient as the admin.
+        users.smartWalletWithIERC1271 = payable(address(new ERC1271WalletMock(users.recipient)));
+        vm.label(users.smartWalletWithIERC1271, "SmartWalletWithIERC1271");
+        dealAndApproveSpenders(users.smartWalletWithIERC1271, spenders);
+
+        // Create a new recipient as a dummy smart contract.
+        users.smartWalletWithoutIERC1271 = payable(address(new Noop()));
+        vm.label(users.smartWalletWithoutIERC1271, "SmartWalletWithoutIERC1271");
+        dealAndApproveSpenders(users.smartWalletWithoutIERC1271, spenders);
+
+        // Create rest of the users.
+        users.campaignCreator = createUser("CampaignCreator", spenders);
+        users.eve = createUser("Eve", spenders);
+        users.unknownRecipient = createUser("UnknownRecipient", spenders);
+        users.sender = createUser("Sender", spenders);
+    }
+
+    /// @dev Deploys the factories conditionally based on the test profile.
+    function deployFactoriesConditionally() internal {
+        if (!isTestOptimizedProfile()) {
+            factoryMerkleExecute = new StreamArcFactoryMerkleExecute(address(comptroller));
+            factoryMerkleInstant = new StreamArcFactoryMerkleInstant(address(comptroller));
+            factoryMerkleLL = new StreamArcFactoryMerkleLL(address(comptroller));
+            factoryMerkleLT = new StreamArcFactoryMerkleLT(address(comptroller));
+            factoryMerkleVCA = new StreamArcFactoryMerkleVCA(address(comptroller));
+        } else {
+            (factoryMerkleExecute, factoryMerkleInstant, factoryMerkleLL, factoryMerkleLT, factoryMerkleVCA) =
+                deployOptimizedFactories(address(comptroller));
+        }
+        vm.label({ account: address(factoryMerkleExecute), newLabel: "FactoryMerkleExecute" });
+        vm.label({ account: address(factoryMerkleInstant), newLabel: "FactoryMerkleInstant" });
+        vm.label({ account: address(factoryMerkleLL), newLabel: "FactoryMerkleLL" });
+        vm.label({ account: address(factoryMerkleLT), newLabel: "FactoryMerkleLT" });
+        vm.label({ account: address(factoryMerkleVCA), newLabel: "FactoryMerkleVCA" });
+    }
+
+    /// @dev Funds the provided campaign with DAI.
+    function fundCampaignWithDai(address campaignAddress) internal {
+        deal({ token: address(dai), to: campaignAddress, give: AGGREGATE_AMOUNT });
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                    MERKLE-BUILDER
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /// @dev Returns the index of the default recipient in the Merkle tree.
+    function getIndexInMerkleTree() internal view returns (uint256 index) {
+        index = getIndexInMerkleTree(users.recipient);
+    }
+
+    /// @dev Returns the index of the recipient in the Merkle tree.
+    function getIndexInMerkleTree(address recipient) internal view returns (uint256 index) {
+        if (recipient == users.recipient) {
+            index = INDEX1;
+        } else if (recipient == users.smartWalletWithIERC1271) {
+            index = INDEX2;
+        } else if (recipient == users.smartWalletWithoutIERC1271) {
+            index = INDEX3;
+        } else if (recipient == users.unknownRecipient) {
+            index = INDEX4;
+        } else {
+            revert("Invalid recipient");
+        }
+    }
+
+    /// @dev Returns the Merkle proof for the default recipient.
+    function getMerkleProof() internal view returns (bytes32[] memory merkleProof) {
+        merkleProof = getMerkleProof(users.recipient);
+    }
+
+    /// @dev Returns the Merkle proof for the given recipient.
+    function getMerkleProof(address recipient) internal view returns (bytes32[] memory merkleProof) {
+        uint256 index = getIndexInMerkleTree(recipient);
+        merkleProof = computeMerkleProof(LeafData({ index: index, recipient: recipient, amount: CLAIM_AMOUNT }), LEAVES);
+    }
+
+    /// @dev We need a separate function to initialize the Merkle tree because, at the construction time, the users are
+    /// not yet set.
+    function initMerkleTree() public {
+        LeafData[] memory leafData = new LeafData[](RECIPIENT_COUNT);
+        address[] memory recipients = new address[](RECIPIENT_COUNT);
+        recipients[0] = users.recipient;
+        recipients[1] = users.smartWalletWithIERC1271;
+        recipients[2] = users.smartWalletWithoutIERC1271;
+        recipients[3] = users.unknownRecipient;
+
+        for (uint256 i = 0; i < RECIPIENT_COUNT; ++i) {
+            leafData[i] = LeafData({
+                index: getIndexInMerkleTree(recipients[i]),
+                recipient: recipients[i],
+                amount: CLAIM_AMOUNT
+            });
+        }
+
+        computeLeaves(LEAVES, leafData);
+        MERKLE_ROOT = getRoot(toBytes32(LEAVES));
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                            CALL EXPECTS - MERKLE LOCKUP
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /// @dev Expects a call to {claimTo} with data provided.
+    function expectCallToClaimToWithData(
+        address merkleLockup,
+        uint256 feeInWei,
+        uint256 index,
+        address to,
+        uint128 amount,
+        bytes32[] memory merkleProof
+    )
+        internal
+    {
+        vm.expectCall(
+            merkleLockup, feeInWei, abi.encodeCall(IStreamArcMerkleInstant.claimTo, (index, to, amount, merkleProof))
+        );
+    }
+
+    /// @dev Expects a call to {claimTo} with msgValue as `msg.value`.
+    function expectCallToClaimToWithMsgValue(address merkleLockup, uint256 msgValue) internal {
+        vm.expectCall(
+            merkleLockup,
+            msgValue,
+            abi.encodeCall(
+                IStreamArcMerkleInstant.claimTo, (getIndexInMerkleTree(), users.eve, CLAIM_AMOUNT, getMerkleProof())
+            )
+        );
+    }
+
+    /// @dev Expects a call to {claimViaSig} with msgValue as `msg.value`.
+    function expectCallToClaimViaSigWithMsgValue(address merkleLockup, uint256 msgValue) internal {
+        vm.expectCall(
+            merkleLockup,
+            msgValue,
+            abi.encodeCall(
+                IStreamArcMerkleInstant.claimViaSig,
+                (
+                    getIndexInMerkleTree(),
+                    users.recipient,
+                    users.eve,
+                    CLAIM_AMOUNT,
+                    getBlockTimestamp(),
+                    getMerkleProof(),
+                    eip712Signature
+                )
+            )
+        );
+    }
+
+    /// @dev Expects a call to {claim} with data provided.
+    function expectCallToClaimWithData(
+        address merkleLockup,
+        uint256 feeInWei,
+        uint256 index,
+        address recipient,
+        uint128 amount,
+        bytes32[] memory merkleProof
+    )
+        internal
+    {
+        vm.expectCall(
+            merkleLockup, feeInWei, abi.encodeCall(IStreamArcMerkleInstant.claim, (index, recipient, amount, merkleProof))
+        );
+    }
+
+    /// @dev Expects a call to {claim} with msgValue as `msg.value`.
+    function expectCallToClaimWithMsgValue(address merkleLockup, uint256 msgValue) internal {
+        vm.expectCall(
+            merkleLockup,
+            msgValue,
+            abi.encodeCall(
+                IStreamArcMerkleInstant.claim, (getIndexInMerkleTree(), users.recipient, CLAIM_AMOUNT, getMerkleProof())
+            )
+        );
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                  MERKLE-EXECUTE
+    //////////////////////////////////////////////////////////////////////////*/
+
+    function computeMerkleExecuteAddress() internal view returns (address) {
+        return computeMerkleExecuteAddress(
+            merkleExecuteConstructorParams({
+                campaignCreator: users.campaignCreator,
+                campaignStartTime: CAMPAIGN_START_TIME,
+                expiration: EXPIRATION,
+                merkleRoot: MERKLE_ROOT,
+                tokenAddress: dai,
+                targetAddress: address(mockStaking),
+                selector: MockStaking.stake.selector
+            }),
+            users.campaignCreator
+        );
+    }
+
+    function computeMerkleExecuteAddress(
+        MerkleExecute.ConstructorParams memory params,
+        address campaignCreator
+    )
+        internal
+        view
+        returns (address)
+    {
+        bytes32 salt = keccak256(abi.encodePacked(campaignCreator, comptroller, abi.encode(params)));
+        bytes32 creationBytecodeHash;
+
+        if (!isTestOptimizedProfile()) {
+            creationBytecodeHash = keccak256(
+                bytes.concat(
+                    type(StreamArcMerkleExecute).creationCode, abi.encode(params, campaignCreator, address(comptroller))
+                )
+            );
+        } else {
+            creationBytecodeHash = keccak256(
+                bytes.concat(
+                    vm.getCode("out-optimized/StreamArcMerkleExecute.sol/StreamArcMerkleExecute.json"),
+                    abi.encode(params, campaignCreator, address(comptroller))
+                )
+            );
+        }
+
+        return vm.computeCreate2Address({
+            salt: salt,
+            initCodeHash: creationBytecodeHash,
+            deployer: address(factoryMerkleExecute)
+        });
+    }
+
+    function merkleExecuteConstructorParams() public view returns (MerkleExecute.ConstructorParams memory) {
+        return merkleExecuteConstructorParams({
+            campaignCreator: users.campaignCreator,
+            campaignStartTime: CAMPAIGN_START_TIME,
+            expiration: EXPIRATION,
+            merkleRoot: MERKLE_ROOT,
+            tokenAddress: dai,
+            targetAddress: address(mockStaking),
+            selector: MockStaking.stake.selector
+        });
+    }
+
+    function merkleExecuteConstructorParams(uint40 expiration)
+        public
+        view
+        returns (MerkleExecute.ConstructorParams memory)
+    {
+        return merkleExecuteConstructorParams({
+            campaignCreator: users.campaignCreator,
+            campaignStartTime: CAMPAIGN_START_TIME,
+            expiration: expiration,
+            merkleRoot: MERKLE_ROOT,
+            tokenAddress: dai,
+            targetAddress: address(mockStaking),
+            selector: MockStaking.stake.selector
+        });
+    }
+
+    function merkleExecuteConstructorParams(
+        address campaignCreator,
+        uint40 campaignStartTime,
+        uint40 expiration,
+        bytes32 merkleRoot,
+        IERC20 tokenAddress,
+        address targetAddress,
+        bytes4 selector
+    )
+        public
+        view
+        returns (MerkleExecute.ConstructorParams memory)
+    {
+        return MerkleExecute.ConstructorParams({
+            campaignName: CAMPAIGN_NAME,
+            campaignStartTime: campaignStartTime,
+            expiration: expiration,
+            initialAdmin: campaignCreator,
+            ipfsCID: IPFS_CID,
+            merkleRoot: merkleRoot,
+            selector: selector,
+            target: targetAddress,
+            token: tokenAddress
+        });
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                  MERKLE-INSTANT
+    //////////////////////////////////////////////////////////////////////////*/
+
+    function computeMerkleInstantAddress() internal view returns (address) {
+        return computeMerkleInstantAddress(
+            merkleInstantConstructorParams({
+                campaignCreator: users.campaignCreator,
+                campaignStartTime: CAMPAIGN_START_TIME,
+                expiration: EXPIRATION,
+                merkleRoot: MERKLE_ROOT,
+                tokenAddress: dai
+            }),
+            users.campaignCreator
+        );
+    }
+
+    function computeMerkleInstantAddress(
+        MerkleInstant.ConstructorParams memory params,
+        address campaignCreator
+    )
+        internal
+        view
+        returns (address)
+    {
+        bytes32 salt = keccak256(abi.encodePacked(campaignCreator, comptroller, abi.encode(params)));
+        bytes32 creationBytecodeHash;
+
+        if (!isTestOptimizedProfile()) {
+            creationBytecodeHash = keccak256(
+                bytes.concat(
+                    type(StreamArcMerkleInstant).creationCode, abi.encode(params, campaignCreator, address(comptroller))
+                )
+            );
+        } else {
+            creationBytecodeHash = keccak256(
+                bytes.concat(
+                    vm.getCode("out-optimized/StreamArcMerkleInstant.sol/StreamArcMerkleInstant.json"),
+                    abi.encode(params, campaignCreator, address(comptroller))
+                )
+            );
+        }
+
+        return vm.computeCreate2Address({
+            salt: salt,
+            initCodeHash: creationBytecodeHash,
+            deployer: address(factoryMerkleInstant)
+        });
+    }
+
+    function merkleInstantConstructorParams() public view returns (MerkleInstant.ConstructorParams memory) {
+        return merkleInstantConstructorParams(users.campaignCreator, CAMPAIGN_START_TIME, EXPIRATION, MERKLE_ROOT, dai);
+    }
+
+    function merkleInstantConstructorParams(uint40 expiration)
+        public
+        view
+        returns (MerkleInstant.ConstructorParams memory)
+    {
+        return merkleInstantConstructorParams({
+            campaignCreator: users.campaignCreator,
+            campaignStartTime: CAMPAIGN_START_TIME,
+            expiration: expiration,
+            merkleRoot: MERKLE_ROOT,
+            tokenAddress: dai
+        });
+    }
+
+    function merkleInstantConstructorParams(
+        address campaignCreator,
+        uint40 campaignStartTime,
+        uint40 expiration,
+        bytes32 merkleRoot,
+        IERC20 tokenAddress
+    )
+        public
+        view
+        returns (MerkleInstant.ConstructorParams memory)
+    {
+        return MerkleInstant.ConstructorParams({
+            campaignName: CAMPAIGN_NAME,
+            campaignStartTime: campaignStartTime,
+            claimType: ClaimType.DEFAULT,
+            expiration: expiration,
+            initialAdmin: campaignCreator,
+            ipfsCID: IPFS_CID,
+            merkleRoot: merkleRoot,
+            token: tokenAddress
+        });
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                    MERKLE-LL
+    //////////////////////////////////////////////////////////////////////////*/
+
+    function computeMerkleLLAddress() internal view returns (address) {
+        return computeMerkleLLAddress(
+            merkleLLConstructorParams({
+                campaignCreator: users.campaignCreator,
+                campaignStartTime: CAMPAIGN_START_TIME,
+                expiration: EXPIRATION,
+                lockupAddress: lockup,
+                merkleRoot: MERKLE_ROOT,
+                tokenAddress: dai,
+                vestingStartTime: VESTING_START_TIME
+            }),
+            users.campaignCreator
+        );
+    }
+
+    function computeMerkleLLAddress(
+        MerkleLL.ConstructorParams memory params,
+        address campaignCreator
+    )
+        internal
+        view
+        returns (address)
+    {
+        bytes32 salt = keccak256(abi.encodePacked(campaignCreator, comptroller, abi.encode(params)));
+
+        bytes32 creationBytecodeHash;
+        if (!isTestOptimizedProfile()) {
+            creationBytecodeHash = keccak256(
+                bytes.concat(
+                    type(StreamArcMerkleLL).creationCode, abi.encode(params, campaignCreator, address(comptroller))
+                )
+            );
+        } else {
+            creationBytecodeHash = keccak256(
+                bytes.concat(
+                    vm.getCode("out-optimized/StreamArcMerkleLL.sol/StreamArcMerkleLL.json"),
+                    abi.encode(params, campaignCreator, address(comptroller))
+                )
+            );
+        }
+        return vm.computeCreate2Address({
+            salt: salt,
+            initCodeHash: creationBytecodeHash,
+            deployer: address(factoryMerkleLL)
+        });
+    }
+
+    function merkleLLConstructorParams() public view returns (MerkleLL.ConstructorParams memory) {
+        return merkleLLConstructorParams(EXPIRATION);
+    }
+
+    function merkleLLConstructorParams(uint40 expiration) public view returns (MerkleLL.ConstructorParams memory) {
+        return merkleLLConstructorParams({
+            campaignCreator: users.campaignCreator,
+            campaignStartTime: CAMPAIGN_START_TIME,
+            expiration: expiration,
+            lockupAddress: lockup,
+            merkleRoot: MERKLE_ROOT,
+            tokenAddress: dai,
+            vestingStartTime: VESTING_START_TIME
+        });
+    }
+
+    function merkleLLConstructorParams(
+        address campaignCreator,
+        uint40 campaignStartTime,
+        uint40 expiration,
+        IStreamArcLockup lockupAddress,
+        bytes32 merkleRoot,
+        IERC20 tokenAddress,
+        uint40 vestingStartTime
+    )
+        public
+        view
+        returns (MerkleLL.ConstructorParams memory)
+    {
+        return MerkleLL.ConstructorParams({
+            campaignName: CAMPAIGN_NAME,
+            campaignStartTime: campaignStartTime,
+            cancelable: STREAM_CANCELABLE,
+            claimType: ClaimType.DEFAULT,
+            cliffDuration: VESTING_CLIFF_DURATION,
+            cliffUnlockPercentage: VESTING_CLIFF_UNLOCK_PERCENTAGE,
+            expiration: expiration,
+            granularity: VESTING_GRANULARITY,
+            initialAdmin: campaignCreator,
+            ipfsCID: IPFS_CID,
+            lockup: lockupAddress,
+            merkleRoot: merkleRoot,
+            startUnlockPercentage: VESTING_START_UNLOCK_PERCENTAGE,
+            shape: STREAM_SHAPE,
+            token: tokenAddress,
+            totalDuration: VESTING_TOTAL_DURATION,
+            transferable: STREAM_TRANSFERABLE,
+            vestingStartTime: vestingStartTime
+        });
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                    MERKLE-LT
+    //////////////////////////////////////////////////////////////////////////*/
+
+    function computeMerkleLTAddress() internal view returns (address) {
+        return computeMerkleLTAddress(
+            merkleLTConstructorParams({
+                campaignCreator: users.campaignCreator,
+                campaignStartTime: CAMPAIGN_START_TIME,
+                expiration: EXPIRATION,
+                lockupAddress: lockup,
+                merkleRoot: MERKLE_ROOT,
+                tokenAddress: dai,
+                vestingStartTime: VESTING_START_TIME
+            }),
+            users.campaignCreator
+        );
+    }
+
+    function computeMerkleLTAddress(
+        MerkleLT.ConstructorParams memory params,
+        address campaignCreator
+    )
+        internal
+        view
+        returns (address)
+    {
+        bytes32 salt = keccak256(abi.encodePacked(campaignCreator, comptroller, abi.encode(params)));
+
+        bytes32 creationBytecodeHash;
+        if (!isTestOptimizedProfile()) {
+            creationBytecodeHash = keccak256(
+                bytes.concat(
+                    type(StreamArcMerkleLT).creationCode, abi.encode(params, campaignCreator, address(comptroller))
+                )
+            );
+        } else {
+            creationBytecodeHash = keccak256(
+                bytes.concat(
+                    vm.getCode("out-optimized/StreamArcMerkleLT.sol/StreamArcMerkleLT.json"),
+                    abi.encode(params, campaignCreator, address(comptroller))
+                )
+            );
+        }
+
+        return vm.computeCreate2Address({
+            salt: salt,
+            initCodeHash: creationBytecodeHash,
+            deployer: address(factoryMerkleLT)
+        });
+    }
+
+    function getTotalDuration(MerkleLT.TrancheWithPercentage[] memory tranches)
+        internal
+        pure
+        returns (uint40 totalDuration)
+    {
+        for (uint256 i; i < tranches.length; ++i) {
+            totalDuration += tranches[i].duration;
+        }
+    }
+
+    function merkleLTConstructorParams() public view returns (MerkleLT.ConstructorParams memory) {
+        return merkleLTConstructorParams(EXPIRATION);
+    }
+
+    function merkleLTConstructorParams(uint40 expiration) public view returns (MerkleLT.ConstructorParams memory) {
+        return merkleLTConstructorParams({
+            campaignCreator: users.campaignCreator,
+            campaignStartTime: CAMPAIGN_START_TIME,
+            expiration: expiration,
+            lockupAddress: lockup,
+            merkleRoot: MERKLE_ROOT,
+            tokenAddress: dai,
+            vestingStartTime: VESTING_START_TIME
+        });
+    }
+
+    function merkleLTConstructorParams(
+        address campaignCreator,
+        uint40 campaignStartTime,
+        uint40 expiration,
+        IStreamArcLockup lockupAddress,
+        bytes32 merkleRoot,
+        IERC20 tokenAddress,
+        uint40 vestingStartTime
+    )
+        public
+        view
+        returns (MerkleLT.ConstructorParams memory)
+    {
+        MerkleLT.TrancheWithPercentage[] memory tranchesWithPercentages_ = new MerkleLT.TrancheWithPercentage[](2);
+        tranchesWithPercentages_[0] =
+            MerkleLT.TrancheWithPercentage({ unlockPercentage: ud2x18(0.2e18), duration: 2 days });
+        tranchesWithPercentages_[1] =
+            MerkleLT.TrancheWithPercentage({ unlockPercentage: ud2x18(0.8e18), duration: 8 days });
+
+        return MerkleLT.ConstructorParams({
+            campaignName: CAMPAIGN_NAME,
+            campaignStartTime: campaignStartTime,
+            claimType: ClaimType.DEFAULT,
+            cancelable: STREAM_CANCELABLE,
+            expiration: expiration,
+            initialAdmin: campaignCreator,
+            ipfsCID: IPFS_CID,
+            lockup: lockupAddress,
+            merkleRoot: merkleRoot,
+            shape: STREAM_SHAPE,
+            token: tokenAddress,
+            tranchesWithPercentages: tranchesWithPercentages_,
+            transferable: STREAM_TRANSFERABLE,
+            vestingStartTime: vestingStartTime
+        });
+    }
+
+    /// @dev Mirrors the logic from {StreamArcMerkleLT._calculateStartTimeAndTranches}.
+    function tranchesMerkleLT(
+        uint40 streamStartTime,
+        uint128 totalAmount
+    )
+        public
+        view
+        returns (LockupTranched.Tranche[] memory tranches_)
+    {
+        tranches_ = new LockupTranched.Tranche[](2);
+        if (streamStartTime == 0) {
+            tranches_[0].timestamp = getBlockTimestamp() + VESTING_CLIFF_DURATION;
+            tranches_[1].timestamp = getBlockTimestamp() + VESTING_TOTAL_DURATION;
+        } else {
+            tranches_[0].timestamp = streamStartTime + VESTING_CLIFF_DURATION;
+            tranches_[1].timestamp = streamStartTime + VESTING_TOTAL_DURATION;
+        }
+
+        uint128 amount0 = ud(totalAmount).mul(ud(0.2e18)).intoUint128();
+        uint128 amount1 = ud(totalAmount).mul(ud(0.8e18)).intoUint128();
+
+        tranches_[0].amount = amount0;
+        tranches_[1].amount = amount1;
+
+        uint128 amountsSum = amount0 + amount1;
+
+        if (amountsSum != totalAmount) {
+            tranches_[1].amount += totalAmount - amountsSum;
+        }
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                    MERKLE-VCA
+    //////////////////////////////////////////////////////////////////////////*/
+
+    function computeMerkleVCAAddress() internal view returns (address) {
+        return computeMerkleVCAAddress(
+            merkleVCAConstructorParams({
+                aggregateAmount: AGGREGATE_AMOUNT,
+                campaignCreator: users.campaignCreator,
+                campaignStartTime: CAMPAIGN_START_TIME,
+                enableRedistribution: false,
+                expiration: EXPIRATION,
+                merkleRoot: MERKLE_ROOT,
+                tokenAddress: dai,
+                unlockPercentage: VCA_UNLOCK_PERCENTAGE,
+                vestingEndTime: VESTING_END_TIME,
+                vestingStartTime: VCA_START_TIME
+            }),
+            users.campaignCreator
+        );
+    }
+
+    function computeMerkleVCAAddress(
+        MerkleVCA.ConstructorParams memory params,
+        address campaignCreator
+    )
+        internal
+        view
+        returns (address)
+    {
+        bytes32 salt = keccak256(abi.encodePacked(campaignCreator, comptroller, abi.encode(params)));
+
+        bytes32 creationBytecodeHash;
+        if (!isTestOptimizedProfile()) {
+            creationBytecodeHash = keccak256(
+                bytes.concat(
+                    type(StreamArcMerkleVCA).creationCode, abi.encode(params, campaignCreator, address(comptroller))
+                )
+            );
+        } else {
+            creationBytecodeHash = keccak256(
+                bytes.concat(
+                    vm.getCode("out-optimized/StreamArcMerkleVCA.sol/StreamArcMerkleVCA.json"),
+                    abi.encode(params, campaignCreator, address(comptroller))
+                )
+            );
+        }
+        return vm.computeCreate2Address({
+            salt: salt,
+            initCodeHash: creationBytecodeHash,
+            deployer: address(factoryMerkleVCA)
+        });
+    }
+
+    function merkleVCAConstructorParams() public view returns (MerkleVCA.ConstructorParams memory) {
+        return merkleVCAConstructorParams(EXPIRATION);
+    }
+
+    function merkleVCAConstructorParams(uint40 expiration) public view returns (MerkleVCA.ConstructorParams memory) {
+        return merkleVCAConstructorParams({
+            aggregateAmount: AGGREGATE_AMOUNT,
+            campaignCreator: users.campaignCreator,
+            campaignStartTime: CAMPAIGN_START_TIME,
+            enableRedistribution: false,
+            expiration: expiration,
+            merkleRoot: MERKLE_ROOT,
+            tokenAddress: dai,
+            unlockPercentage: VCA_UNLOCK_PERCENTAGE,
+            vestingEndTime: VESTING_END_TIME,
+            vestingStartTime: VCA_START_TIME
+        });
+    }
+
+    function merkleVCAConstructorParams(
+        uint128 aggregateAmount,
+        address campaignCreator,
+        uint40 campaignStartTime,
+        bool enableRedistribution,
+        uint40 expiration,
+        bytes32 merkleRoot,
+        IERC20 tokenAddress,
+        UD60x18 unlockPercentage,
+        uint40 vestingEndTime,
+        uint40 vestingStartTime
+    )
+        public
+        view
+        returns (MerkleVCA.ConstructorParams memory)
+    {
+        return MerkleVCA.ConstructorParams({
+            aggregateAmount: aggregateAmount,
+            campaignName: CAMPAIGN_NAME,
+            campaignStartTime: campaignStartTime,
+            claimType: ClaimType.DEFAULT,
+            enableRedistribution: enableRedistribution,
+            expiration: expiration,
+            initialAdmin: campaignCreator,
+            ipfsCID: IPFS_CID,
+            merkleRoot: merkleRoot,
+            token: tokenAddress,
+            unlockPercentage: unlockPercentage,
+            vestingEndTime: vestingEndTime,
+            vestingStartTime: vestingStartTime
+        });
+    }
+}
