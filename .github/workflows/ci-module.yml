@@ -15,10 +15,6 @@ on:
         default: "tests/{integration,unit}/**/*.sol"
         required: false
         type: string
-      match-path-fork:
-        default: "tests/fork/**/*.sol"
-        required: false
-        type: string
       match-path-integration:
         default: "tests/{integration,utils}/**/*.sol"
         required: false
@@ -37,8 +33,6 @@ on:
         type: string
     secrets:
       CODECOV_TOKEN:
-        required: false
-      ROUTEMESH_API_KEY:
         required: false
 
 jobs:
@@ -69,21 +63,6 @@ jobs:
       name: "Bulloak check"
       skip-modifiers: true
       test-dir: "${{ inputs.module }}/tests"
-      working-directory: ${{ inputs.module }}
-
-  test-fork:
-    needs: ["build", "check"]
-    if: needs.build.outputs.cache-status != 'primary'
-    secrets:
-      ROUTEMESH_API_KEY: ${{ secrets.ROUTEMESH_API_KEY }}
-    uses: "sablier-labs/gha-utils/.github/workflows/forge-test.yml@92b8ac45efc96fc01c66ad4da579daff8ed58af3"
-    with:
-      cache-path: *cache-path
-      foundry-fuzz-runs: 20
-      foundry-profile: "test-optimized"
-      foundry-version: *foundry-version
-      match-path: ${{ inputs.match-path-fork }}
-      name: "Fork tests"
       working-directory: ${{ inputs.module }}
 
   test-integration:

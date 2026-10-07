@@ -46,6 +46,7 @@ Expected: 1,482 pass (utils 200, lockup 616, flow 268, airdrops 398).
   (EPERM), leaving them empty. After install:
   `for d in lockup flow airdrops; do cp -r utils/src utils/package.json $d/node_modules/@streamarc/evm-utils/; done`
   and `cp -r lockup/src lockup/tests lockup/package.json airdrops/node_modules/@streamarc/lockup/`.
+- CI pins Foundry v1.8.3. Run `forge fmt` with that version; older formatters wrap lines differently.
 - Shell scripts are bash (Git Bash/WSL) and need `forge`/`cast` on PATH.
 - `deploy-arc.sh` extracts addresses by grepping `console2.log` labels in the Arc scripts. Renaming a label means
   updating the matching `addr "<label>"` call.

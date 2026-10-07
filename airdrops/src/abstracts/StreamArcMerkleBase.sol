@@ -99,8 +99,10 @@ abstract contract StreamArcMerkleBase is
 
         campaignName = baseParams.campaignName;
         ipfsCID = baseParams.ipfsCID;
-        minFeeUSD = IStreamArcComptroller(baseParams.comptroller)
-            .getMinFeeUSDFor({ protocol: IStreamArcComptroller.Protocol.Airdrops, user: baseParams.campaignCreator });
+        minFeeUSD = IStreamArcComptroller(baseParams.comptroller).getMinFeeUSDFor({
+            protocol: IStreamArcComptroller.Protocol.Airdrops,
+            user: baseParams.campaignCreator
+        });
     }
 
     /*//////////////////////////////////////////////////////////////////////////
