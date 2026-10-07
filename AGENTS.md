@@ -6,7 +6,9 @@ has its own `AGENTS.md` with protocol concepts.
 
 ## Rules
 
-- **Comments:** only when absolutely necessary, one to two lines max. No paragraph explanations, no restating the code.
+- **Comments:** none by default. Only when the code can't explain itself, and then one short line. No NatSpec, no
+  section banners, no trailing field comments, no paragraphs, no restating the code. Applies to every file, new or
+  edited.
 - **No duplicate logic:** reuse what exists (in this repo or a dependency) instead of re-writing it.
 - **Do not change contract logic under `*/src/`.** The contracts are audited code, renamed only. Arc work goes in
   `*/scripts/solidity/arc/`, the root `*.sh` scripts, docs, and the app.
