@@ -77,9 +77,8 @@ these [diagrams](https://github.com/Raveesh1007/StreamArc).
 
 ## Deployments
 
-The list of all deployment addresses can be found [here](https://github.com/Raveesh1007/StreamArc). For
-guidance on the deployment scripts, see the [Deployments Guide](https://github.com/Raveesh1007/StreamArc) in
-our docs.
+The list of all deployment addresses can be found [here](https://github.com/Raveesh1007/StreamArc). For guidance on the
+deployment scripts, see the [Deployments Guide](https://github.com/Raveesh1007/StreamArc) in our docs.
 
 ## Security
 

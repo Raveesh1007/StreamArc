@@ -19,8 +19,7 @@ The format is based on [Common Changelog](https://common-changelog.org/).
 
 ### Changed
 
-- **Breaking**: Rename `RoleGranted` event to `GrantRole`
-  ([#1433](https://github.com/Raveesh1007/StreamArc/pull/1433))
+- **Breaking**: Rename `RoleGranted` event to `GrantRole` ([#1433](https://github.com/Raveesh1007/StreamArc/pull/1433))
 - **Breaking**: Merge `DisableCustomFeeUSD` and `SetCustomFeeUSD` events into `UpdateCustomFeeUSD`
   ([#1369](https://github.com/Raveesh1007/StreamArc/pull/1369))
 
@@ -36,8 +35,7 @@ The format is based on [Common Changelog](https://common-changelog.org/).
   ([#1429](https://github.com/Raveesh1007/StreamArc/pull/1429))
 - Add `setAttestor` and `setAttestorForCampaign` functions to Comptroller for managing attestor address
   ([#1403](https://github.com/Raveesh1007/StreamArc/pull/1403))
-- Add `lowerMinFeeUSDForCampaign` function to Comptroller
-  ([#1371](https://github.com/Raveesh1007/StreamArc/pull/1371))
+- Add `lowerMinFeeUSDForCampaign` function to Comptroller ([#1371](https://github.com/Raveesh1007/StreamArc/pull/1371))
 - Add `withdrawERC20Token` function to withdraw ERC20 Tokens from Comptroller
   ([#1404](https://github.com/Raveesh1007/StreamArc/pull/1404))
 - Add versioning to Comptroller ([#1402](https://github.com/Raveesh1007/StreamArc/pull/1402))

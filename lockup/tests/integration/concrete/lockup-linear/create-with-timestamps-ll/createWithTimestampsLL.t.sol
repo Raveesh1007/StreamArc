@@ -61,7 +61,9 @@ contract CreateWithTimestampsLL_Integration_Concrete_Test is CreateWithTimestamp
         _defaultParams.unlockAmounts.cliff = 0;
 
         vm.expectRevert(
-            abi.encodeWithSelector(Errors.StreamArcLockupHelpers_StartTimeNotLessThanEndTime.selector, startTime, endTime)
+            abi.encodeWithSelector(
+                Errors.StreamArcLockupHelpers_StartTimeNotLessThanEndTime.selector, startTime, endTime
+            )
         );
         createDefaultStream();
     }

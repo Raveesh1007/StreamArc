@@ -136,7 +136,9 @@ contract Initialize_Integration_Concrete_Test is Base_Test {
             uninitializedProxy.getMinFeeUSD(IStreamArcComptroller.Protocol.Bob), BOB_MIN_FEE_USD, "get min fee USD Bob"
         );
         assertEq(
-            uninitializedProxy.getMinFeeUSD(IStreamArcComptroller.Protocol.Flow), FLOW_MIN_FEE_USD, "get min fee USD Flow"
+            uninitializedProxy.getMinFeeUSD(IStreamArcComptroller.Protocol.Flow),
+            FLOW_MIN_FEE_USD,
+            "get min fee USD Flow"
         );
         assertEq(
             uninitializedProxy.getMinFeeUSD(IStreamArcComptroller.Protocol.Lockup),

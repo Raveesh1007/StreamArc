@@ -22,7 +22,9 @@ abstract contract Claim_Integration_Concrete_Test is Integration_Test {
         vm.warp({ newTimestamp: warpTime });
 
         vm.expectRevert(
-            abi.encodeWithSelector(Errors.StreamArcMerkleBase_CampaignNotStarted.selector, warpTime, CAMPAIGN_START_TIME)
+            abi.encodeWithSelector(
+                Errors.StreamArcMerkleBase_CampaignNotStarted.selector, warpTime, CAMPAIGN_START_TIME
+            )
         );
         claim();
     }
@@ -31,7 +33,9 @@ abstract contract Claim_Integration_Concrete_Test is Integration_Test {
         uint40 warpTime = EXPIRATION + 1 seconds;
         vm.warp({ newTimestamp: warpTime });
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.StreamArcMerkleBase_CampaignExpired.selector, warpTime, EXPIRATION));
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.StreamArcMerkleBase_CampaignExpired.selector, warpTime, EXPIRATION)
+        );
         claim();
     }
 
@@ -62,7 +66,9 @@ abstract contract Claim_Integration_Concrete_Test is Integration_Test {
     {
         claim();
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.StreamArcMerkleBase_IndexClaimed.selector, getIndexInMerkleTree()));
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.StreamArcMerkleBase_IndexClaimed.selector, getIndexInMerkleTree())
+        );
         claim();
     }
 

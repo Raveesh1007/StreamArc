@@ -18,7 +18,12 @@
     "@streamarc/flow": "file:../flow",
     "@streamarc/lockup": "file:../lockup"
   },
+  "overrides": {
+    "@streamarc/evm-utils": "file:../utils",
+    "@streamarc/lockup": "file:../lockup"
+  },
   "devDependencies": {
+    "@sablier/devkit": "1",
     "forge-std": "github:foundry-rs/forge-std#v1.14.0",
     "lint-staged": "16.2.6",
     "prettier": "3.6.2",

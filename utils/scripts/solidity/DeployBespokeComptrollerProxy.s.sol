@@ -70,7 +70,8 @@ contract DeployBespokeComptrollerProxy is BaseScript {
     function _deploymentParams() private view returns (AtomicComptrollerDeployer.Params memory params) {
         params.create2Factory = CREATE2_FACTORY;
         params.implementationSalt = bytes32(abi.encodePacked(string.concat("Version ", DEPLOYMENT_VERSION)));
-        params.implementationCreationCode = bytes.concat(type(StreamArcComptroller).creationCode, abi.encode(getAdmin()));
+        params.implementationCreationCode =
+            bytes.concat(type(StreamArcComptroller).creationCode, abi.encode(getAdmin()));
         params.proxySalt = keccak256(abi.encode("StreamArc Comptroller Proxy", chainId, DEPLOYMENT_VERSION));
         params.initialAdmin = getAdmin();
         params.initialMinFeeUSD = getInitialMinFeeUSD();

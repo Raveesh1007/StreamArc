@@ -11,7 +11,11 @@ import { MerkleExecute } from "../../src/types/MerkleExecute.sol";
 /// @dev Creates a dummy MerkleExecute campaign.
 contract CreateMerkleExecute is EvmUtilsBaseScript {
     /// @dev Deploy via Forge.
-    function run(StreamArcFactoryMerkleExecute factory) public broadcast returns (IStreamArcMerkleExecute merkleExecute) {
+    function run(StreamArcFactoryMerkleExecute factory)
+        public
+        broadcast
+        returns (IStreamArcMerkleExecute merkleExecute)
+    {
         // Prepare the constructor parameters.
         MerkleExecute.ConstructorParams memory campaignParams = MerkleExecute.ConstructorParams({
             campaignName: "The Boys Execute",

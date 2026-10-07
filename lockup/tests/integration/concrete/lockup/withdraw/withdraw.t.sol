@@ -35,7 +35,9 @@ abstract contract Withdraw_Integration_Concrete_Test is Integration_Test {
 
     function test_RevertWhen_WithdrawalAddressZero() external whenNoDelegateCall givenNotNull givenNotDEPLETEDStatus {
         uint128 withdrawAmount = defaults.WITHDRAW_AMOUNT();
-        vm.expectRevert(abi.encodeWithSelector(Errors.StreamArcLockup_WithdrawToZeroAddress.selector, ids.defaultStream));
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.StreamArcLockup_WithdrawToZeroAddress.selector, ids.defaultStream)
+        );
         lockup.withdraw{ value: LOCKUP_MIN_FEE_WEI }({
             streamId: ids.defaultStream,
             to: address(0),
@@ -431,7 +433,9 @@ abstract contract Withdraw_Integration_Concrete_Test is Integration_Test {
         // Expect a revert.
         uint128 withdrawAmount = defaults.WITHDRAW_AMOUNT();
         vm.expectRevert(
-            abi.encodeWithSelector(Errors.StreamArcLockup_InvalidHookSelector.selector, address(recipientInvalidSelector))
+            abi.encodeWithSelector(
+                Errors.StreamArcLockup_InvalidHookSelector.selector, address(recipientInvalidSelector)
+            )
         );
 
         // Cancel the stream.

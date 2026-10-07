@@ -102,8 +102,8 @@ interface IStreamArcBatchLockup {
     /// @notice Creates a batch of LPG streams using `createWithTimestampsLPG`.
     ///
     /// @dev Notes:
-    /// - The LPG model does not support a "createWithDuration" function because the {StreamArcLockup} contract is at the
-    /// size limit. If the EVM contract size limit is increased in the future, this function will be added.
+    /// - The LPG model does not support a "createWithDuration" function because the {StreamArcLockup} contract is at
+    /// the size limit. If the EVM contract size limit is increased in the future, this function will be added.
     ///
     /// Requirements:
     /// - There must be at least one element in `batch`.

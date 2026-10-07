@@ -45,7 +45,11 @@ contract Restart_Integration_Fuzz_Test is Shared_Integration_Fuzz_Test {
 
         // Expect the relevant events to be emitted.
         vm.expectEmit({ emitter: address(flow) });
-        emit IStreamArcFlow.RestartFlowStream({ streamId: streamId, sender: users.sender, ratePerSecond: ratePerSecond });
+        emit IStreamArcFlow.RestartFlowStream({
+            streamId: streamId,
+            sender: users.sender,
+            ratePerSecond: ratePerSecond
+        });
 
         vm.expectEmit({ emitter: address(flow) });
         emit IERC4906.MetadataUpdate({ _tokenId: streamId });

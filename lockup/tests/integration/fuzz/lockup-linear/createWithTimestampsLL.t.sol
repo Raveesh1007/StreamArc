@@ -64,7 +64,9 @@ contract CreateWithTimestampsLL_Integration_Fuzz_Test is Lockup_Linear_Integrati
         _defaultParams.cliffTime = cliffTime;
 
         vm.expectRevert(
-            abi.encodeWithSelector(Errors.StreamArcLockupHelpers_CliffTimeNotLessThanEndTime.selector, cliffTime, endTime)
+            abi.encodeWithSelector(
+                Errors.StreamArcLockupHelpers_CliffTimeNotLessThanEndTime.selector, cliffTime, endTime
+            )
         );
         createDefaultStream();
     }

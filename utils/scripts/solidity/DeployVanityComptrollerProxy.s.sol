@@ -53,7 +53,8 @@ contract DeployVanityComptrollerProxy is BaseScript {
         );
         params.expectedProxy = CANONICAL_COMPTROLLER;
         params.implementationSalt = bytes32(abi.encodePacked(string.concat("Version ", DEPLOYMENT_VERSION)));
-        params.implementationCreationCode = bytes.concat(type(StreamArcComptroller).creationCode, abi.encode(getAdmin()));
+        params.implementationCreationCode =
+            bytes.concat(type(StreamArcComptroller).creationCode, abi.encode(getAdmin()));
         params.expectedImplementation = Create2Utils.computeAddress(
             CREATE2_FACTORY, params.implementationSalt, params.implementationCreationCode
         );

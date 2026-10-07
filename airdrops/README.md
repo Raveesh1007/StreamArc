@@ -9,8 +9,8 @@ In-depth documentation is available at [docs.streamarc.com](https://github.com/R
 
 ## Introduction
 
-StreamArc Airdrops is a collection of smart contracts that allows airdrops of ERC-20 tokens using Merkle trees. It offers
-multiple distributions options, including:
+StreamArc Airdrops is a collection of smart contracts that allows airdrops of ERC-20 tokens using Merkle trees. It
+offers multiple distributions options, including:
 
 1. Instant airdrops: The simplest way to distribute tokens to a list of addresses. Eligible users can claim and receive
    their allocation instantly via a single claim transaction.

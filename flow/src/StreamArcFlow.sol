@@ -999,7 +999,11 @@ contract StreamArcFlow is
         // Check: `msg.sender` is neither the stream's recipient nor an approved third party, the withdrawal address
         // must be the recipient.
         if (to != recipient && !_isCallerStreamRecipientOrApproved(streamId, recipient)) {
-            revert Errors.StreamArcFlow_WithdrawalAddressNotRecipient({ streamId: streamId, caller: msg.sender, to: to });
+            revert Errors.StreamArcFlow_WithdrawalAddressNotRecipient({
+                streamId: streamId,
+                caller: msg.sender,
+                to: to
+            });
         }
 
         uint8 tokenDecimals = _streams[streamId].tokenDecimals;

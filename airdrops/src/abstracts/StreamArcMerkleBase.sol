@@ -99,10 +99,8 @@ abstract contract StreamArcMerkleBase is
 
         campaignName = baseParams.campaignName;
         ipfsCID = baseParams.ipfsCID;
-        minFeeUSD = IStreamArcComptroller(baseParams.comptroller).getMinFeeUSDFor({
-            protocol: IStreamArcComptroller.Protocol.Airdrops,
-            user: baseParams.campaignCreator
-        });
+        minFeeUSD = IStreamArcComptroller(baseParams.comptroller)
+            .getMinFeeUSDFor({ protocol: IStreamArcComptroller.Protocol.Airdrops, user: baseParams.campaignCreator });
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -218,7 +216,10 @@ abstract contract StreamArcMerkleBase is
 
         // Check: the campaign has not expired.
         if (hasExpired()) {
-            revert Errors.StreamArcMerkleBase_CampaignExpired({ blockTimestamp: block.timestamp, expiration: EXPIRATION });
+            revert Errors.StreamArcMerkleBase_CampaignExpired({
+                blockTimestamp: block.timestamp,
+                expiration: EXPIRATION
+            });
         }
 
         // Safe interaction: calculate the min fee in wei.

@@ -41,8 +41,8 @@ interface IStreamArcLockupPriceGated is IStreamArcLockupState {
     /// - The function does not check if the provided oracle reports the price for the deposited token. It may be
     /// possible that stream creator has used a different token for the oracle. In such cases, integrators and
     /// recipients are requested to verify the oracle correctness on their own.
-    /// - The LPG model does not support a "createWithDuration" function because the {StreamArcLockup} contract is at the
-    /// size limit. If the EVM contract size limit is increased in the future, this function will be added.
+    /// - The LPG model does not support a "createWithDuration" function because the {StreamArcLockup} contract is at
+    /// the size limit. If the EVM contract size limit is increased in the future, this function will be added.
     ///
     /// Requirements:
     /// - Must not be delegate called.

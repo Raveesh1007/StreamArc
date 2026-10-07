@@ -115,7 +115,9 @@ contract Constructor_Integration_Concrete_Test is StdAssertions {
         assertEq(comptroller.admin(), INITIAL_ADMIN, "admin");
         assertEq(comptroller.oracle(), address(oracle), "oracle");
 
-        assertEq(comptroller.getMinFeeUSD(IStreamArcComptroller.Protocol.Airdrops), expectedMinFeeUSD, "airdrops min fee");
+        assertEq(
+            comptroller.getMinFeeUSD(IStreamArcComptroller.Protocol.Airdrops), expectedMinFeeUSD, "airdrops min fee"
+        );
         assertEq(comptroller.getMinFeeUSD(IStreamArcComptroller.Protocol.Bob), expectedMinFeeUSD, "bob min fee");
         assertEq(comptroller.getMinFeeUSD(IStreamArcComptroller.Protocol.Flow), expectedMinFeeUSD, "flow min fee");
         assertEq(comptroller.getMinFeeUSD(IStreamArcComptroller.Protocol.Lockup), expectedMinFeeUSD, "lockup min fee");

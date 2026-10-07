@@ -34,17 +34,20 @@ abstract contract DeployOptimized is StdCheats {
         );
         factoryMerkleLL = IStreamArcFactoryMerkleLL(
             deployCode(
-                "out-optimized/StreamArcFactoryMerkleLL.sol/StreamArcFactoryMerkleLL.json", abi.encode(initialComptroller)
+                "out-optimized/StreamArcFactoryMerkleLL.sol/StreamArcFactoryMerkleLL.json",
+                abi.encode(initialComptroller)
             )
         );
         factoryMerkleLT = IStreamArcFactoryMerkleLT(
             deployCode(
-                "out-optimized/StreamArcFactoryMerkleLT.sol/StreamArcFactoryMerkleLT.json", abi.encode(initialComptroller)
+                "out-optimized/StreamArcFactoryMerkleLT.sol/StreamArcFactoryMerkleLT.json",
+                abi.encode(initialComptroller)
             )
         );
         factoryMerkleVCA = IStreamArcFactoryMerkleVCA(
             deployCode(
-                "out-optimized/StreamArcFactoryMerkleVCA.sol/StreamArcFactoryMerkleVCA.json", abi.encode(initialComptroller)
+                "out-optimized/StreamArcFactoryMerkleVCA.sol/StreamArcFactoryMerkleVCA.json",
+                abi.encode(initialComptroller)
             )
         );
     }

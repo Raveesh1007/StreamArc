@@ -36,7 +36,9 @@ abstract contract ClaimTo_Integration_Concrete_Test is Integration_Test {
     function test_RevertGiven_CallerClaimed() external givenDefaultClaimType whenToAddressNotZero {
         claimTo();
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.StreamArcMerkleBase_IndexClaimed.selector, getIndexInMerkleTree()));
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.StreamArcMerkleBase_IndexClaimed.selector, getIndexInMerkleTree())
+        );
         claimTo();
     }
 

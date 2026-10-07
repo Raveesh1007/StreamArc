@@ -102,8 +102,7 @@ The format is based on [Common Changelog](https://common-changelog.org/).
 
 ### Removed
 
-- Remove `V2` from the contract names and related references
-  ([#994](https://github.com/Raveesh1007/StreamArc/pull/994))
+- Remove `V2` from the contract names and related references ([#994](https://github.com/Raveesh1007/StreamArc/pull/994))
 
 [1.3.0]: https://github.com/streamarc-labs/airdrops/releases/tag/v1.3.0
 [2.0.0]: https://github.com/streamarc-labs/airdrops/releases/tag/v2.0.0

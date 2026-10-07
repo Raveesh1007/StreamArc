@@ -28,8 +28,8 @@ The format is based on [Common Changelog](https://common-changelog.org/).
 
 ### Removed
 
-- Remove `safeTokenSymbol` and `isAllowedCharacter` functions from `LockupNFTDescriptor` (moved to `@streamarc/evm-utils`)
-  ([#1424](https://github.com/Raveesh1007/StreamArc/pull/1424))
+- Remove `safeTokenSymbol` and `isAllowedCharacter` functions from `LockupNFTDescriptor` (moved to
+  `@streamarc/evm-utils`) ([#1424](https://github.com/Raveesh1007/StreamArc/pull/1424))
 
 ### Fixed
 
@@ -88,8 +88,8 @@ The format is based on [Common Changelog](https://common-changelog.org/).
 
 ### Changed
 
-- **Breaking:** merge `StreamArcV2LockupLinear`, `StreamArcV2LockupDynamic` and `StreamArcV2LockupTranched` into a single
-  contract called `StreamArcLockup` ([#1069](https://github.com/Raveesh1007/StreamArc/pull/1069))
+- **Breaking:** merge `StreamArcV2LockupLinear`, `StreamArcV2LockupDynamic` and `StreamArcV2LockupTranched` into a
+  single contract called `StreamArcLockup` ([#1069](https://github.com/Raveesh1007/StreamArc/pull/1069))
   - Implement two public libraries `VestingMath` and `Helpers`
   - Implement `Model` enum to differentiate between linear, dynamic and tranched streams
 - Allow setting the end time of linear streams to a past date
@@ -122,8 +122,7 @@ The format is based on [Common Changelog](https://common-changelog.org/).
 
 - No longer support backward compatibility with previous versions of `Lockup` contract in `NFTDescriptor`
   ([#1113](https://github.com/Raveesh1007/StreamArc/pull/1113))
-- Remove `V2` from the contract names and related references
-  ([#994](https://github.com/Raveesh1007/StreamArc/pull/994))
+- Remove `V2` from the contract names and related references ([#994](https://github.com/Raveesh1007/StreamArc/pull/994))
 - Remove `precompiles` from the NPM release ([#1158](https://github.com/Raveesh1007/StreamArc/pull/1158))
 
 ## [1.2.0] - 2024-07-04
@@ -131,19 +130,16 @@ The format is based on [Common Changelog](https://common-changelog.org/).
 ### Changed
 
 - **Breaking:** move common logic into `Lockup` contract ([#784](https://github.com/Raveesh1007/StreamArc/pull/784),
-  [#813](https://github.com/Raveesh1007/StreamArc/pull/813),
-  [#850](https://github.com/Raveesh1007/StreamArc/pull/850),
+  [#813](https://github.com/Raveesh1007/StreamArc/pull/813), [#850](https://github.com/Raveesh1007/StreamArc/pull/850),
   [#941](https://github.com/Raveesh1007/StreamArc/pull/941))
 - **Breaking:** use a new hook system ([#951](https://github.com/Raveesh1007/StreamArc/pull/951))
   - Replace `IStreamArcV2Recipient` with `IStreamArcLockupRecipient` hook interface
   - Remove `try..catch` block from hook calls
 - Allow only supported characters in NFT Descriptor asset symbols
-  ([#945](https://github.com/Raveesh1007/StreamArc/pull/945),
-  [#960](https://github.com/Raveesh1007/StreamArc/pull/960),
+  ([#945](https://github.com/Raveesh1007/StreamArc/pull/945), [#960](https://github.com/Raveesh1007/StreamArc/pull/960),
   [#949](https://github.com/Raveesh1007/StreamArc/pull/949))
 - Bump build dependencies ([#806](https://github.com/Raveesh1007/StreamArc/pull/806),
-  [#942](https://github.com/Raveesh1007/StreamArc/pull/942),
-  [#944](https://github.com/Raveesh1007/StreamArc/pull/944))
+  [#942](https://github.com/Raveesh1007/StreamArc/pull/942), [#944](https://github.com/Raveesh1007/StreamArc/pull/944))
 - Change permissions of `withdraw` function to public ([#785](https://github.com/Raveesh1007/StreamArc/pull/785))
 - Disallow zero `startTime` ([#813](https://github.com/Raveesh1007/StreamArc/pull/813),
   [#852](https://github.com/Raveesh1007/StreamArc/pull/852))

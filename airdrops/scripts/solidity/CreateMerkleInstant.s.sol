@@ -12,7 +12,11 @@ import { MerkleInstant } from "../../src/types/MerkleInstant.sol";
 /// @dev Creates a dummy MerkleInstant campaign.
 contract CreateMerkleInstant is EvmUtilsBaseScript {
     /// @dev Deploy via Forge.
-    function run(StreamArcFactoryMerkleInstant factory) public broadcast returns (IStreamArcMerkleInstant merkleInstant) {
+    function run(StreamArcFactoryMerkleInstant factory)
+        public
+        broadcast
+        returns (IStreamArcMerkleInstant merkleInstant)
+    {
         // Prepare the constructor parameters.
         MerkleInstant.ConstructorParams memory campaignParams = MerkleInstant.ConstructorParams({
             campaignName: "The Boys Instant",

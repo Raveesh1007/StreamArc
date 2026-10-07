@@ -67,7 +67,8 @@ Then, add the following remappings in `remappings.txt`:
 
 ## Usage
 
-This is just a glimpse of StreamArc Flow. For more guides and examples, see the [documentation](https://github.com/Raveesh1007/StreamArc).
+This is just a glimpse of StreamArc Flow. For more guides and examples, see the
+[documentation](https://github.com/Raveesh1007/StreamArc).
 
 ```solidity
 import { IStreamArcFlow } from "@streamarc/flow/src/interfaces/IStreamArcFlow.sol";

@@ -7,8 +7,8 @@ import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol
 import { IRoleAdminable } from "./IRoleAdminable.sol";
 
 /// @title IStreamArcComptroller
-/// @notice Manage fees across all StreamArc protocols. State-changing functions are only accessible to the admin and the
-/// fee manager.
+/// @notice Manage fees across all StreamArc protocols. State-changing functions are only accessible to the admin and
+/// the fee manager.
 interface IStreamArcComptroller is IERC165, IERC1822Proxiable, IRoleAdminable {
     /*//////////////////////////////////////////////////////////////////////////
                                        TYPES

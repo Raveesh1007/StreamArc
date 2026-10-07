@@ -291,7 +291,9 @@ abstract contract Base_Test is Assertions, Modifiers, DeployOptimized, Fuzzers, 
         internal
     {
         vm.expectCall(
-            merkleLockup, feeInWei, abi.encodeCall(IStreamArcMerkleInstant.claim, (index, recipient, amount, merkleProof))
+            merkleLockup,
+            feeInWei,
+            abi.encodeCall(IStreamArcMerkleInstant.claim, (index, recipient, amount, merkleProof))
         );
     }
 

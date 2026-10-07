@@ -159,7 +159,9 @@ abstract contract Cancel_Integration_Concrete_Test is Integration_Test {
     {
         // It should revert.
         vm.expectRevert(
-            abi.encodeWithSelector(Errors.StreamArcLockup_InvalidHookSelector.selector, address(recipientInvalidSelector))
+            abi.encodeWithSelector(
+                Errors.StreamArcLockup_InvalidHookSelector.selector, address(recipientInvalidSelector)
+            )
         );
 
         // Cancel the stream.

@@ -44,7 +44,10 @@ abstract contract Clawback_Integration_Concrete_Test is Integration_Test {
     {
         vm.expectRevert(
             abi.encodeWithSelector(
-                Errors.StreamArcMerkleBase_ClawbackNotAllowed.selector, getBlockTimestamp(), EXPIRATION, FIRST_CLAIM_TIME
+                Errors.StreamArcMerkleBase_ClawbackNotAllowed.selector,
+                getBlockTimestamp(),
+                EXPIRATION,
+                FIRST_CLAIM_TIME
             )
         );
         merkleBase.clawback({ to: users.campaignCreator, amount: 1 });

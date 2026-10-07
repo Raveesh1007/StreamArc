@@ -78,8 +78,8 @@ abstract contract Integration_Test is Base_Test {
                 index, amount, merkleProof, abi.encode(amount)
             );
         }
-        // Otherwise, call the `claim` function using the `IStreamArcMerkleInstant` interface which is compatible with all
-        // other Merkle contracts.
+        // Otherwise, call the `claim` function using the `IStreamArcMerkleInstant` interface which is compatible with
+        // all other Merkle contracts.
         else {
             IStreamArcMerkleInstant(address(merkleBase)).claim{ value: msgValue }(index, recipient, amount, merkleProof);
         }
@@ -181,8 +181,8 @@ abstract contract Integration_Test is Base_Test {
     )
         internal
     {
-        // Using `IStreamArcMerkleInstant` interface over `merkleBase` works for all Merkle contracts due to similarity in
-        // claimViaSig function signature.
+        // Using `IStreamArcMerkleInstant` interface over `merkleBase` works for all Merkle contracts due to similarity
+        // in claimViaSig function signature.
         address campaignAddr = address(merkleBase);
         IStreamArcMerkleInstant(campaignAddr).claimViaSig{ value: msgValue }(
             index, recipient, to, amount, validFrom, merkleProof, signature
