@@ -1,0 +1,19 @@
+name: "CI: Payroll"
+
+on:
+  workflow_dispatch:
+  push: &path_filters
+    branches: [main, staging]
+    paths: ["payroll/**", ".github/workflows/ci-payroll.yml"]
+  pull_request: *path_filters
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: v1.8.3
+      - run: forge test
+        working-directory: payroll

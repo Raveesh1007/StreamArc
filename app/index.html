@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>StreamArc Payroll</title>
+    <meta name="description" content="Per-second USDC payroll on Arc." />
+    <style>
+      :root {
+        --bg: #f6f7f9;
+        --card: #fff;
+        --text: #14171f;
+        --muted: #667085;
+        --line: #e4e7ec;
+        --accent: #3a5bff;
+        --accent-text: #fff;
+        --good: #0f8a4f;
+        --warn: #b54708;
+        --bad: #c4320a;
+        --pill: #eef0f4;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0d0f14;
+          --card: #161a22;
+          --text: #e9ecf2;
+          --muted: #8d96a8;
+          --line: #262c38;
+          --accent: #6b85ff;
+          --good: #3ccb7f;
+          --warn: #f5a524;
+          --bad: #ff6b4a;
+          --pill: #222836;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font:
+          15px/1.5 system-ui,
+          -apple-system,
+          "Segoe UI",
+          sans-serif;
+      }
+      a {
+        color: var(--accent);
+      }
+      header,
+      main,
+      footer {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 16px;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      header h1 {
+        font-size: 20px;
+        margin: 0 auto 0 0;
+      }
+      header h1 small {
+        color: var(--muted);
+        font-weight: 400;
+        font-size: 14px;
+      }
+      .muted,
+      #who,
+      #balance {
+        color: var(--muted);
+      }
+      button {
+        font: inherit;
+        padding: 6px 12px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        background: var(--card);
+        color: var(--text);
+        cursor: pointer;
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+      button.primary,
+      #connect {
+        background: var(--accent);
+        color: var(--accent-text);
+        border-color: var(--accent);
+      }
+      button.danger {
+        color: var(--bad);
+      }
+      nav {
+        display: flex;
+        gap: 4px;
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 0 16px;
+      }
+      nav button {
+        border-radius: 8px 8px 0 0;
+        border-bottom: none;
+        background: transparent;
+      }
+      nav button.on {
+        background: var(--card);
+        font-weight: 600;
+      }
+      h2 {
+        font-size: 16px;
+        margin: 24px 0 8px;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+        gap: 12px;
+      }
+      .stat,
+      .card,
+      form,
+      .table {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 14px 16px;
+      }
+      .stat span {
+        color: var(--muted);
+        font-size: 13px;
+        display: block;
+      }
+      .stat b {
+        font-size: 20px;
+      }
+      .grid2 {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 12px;
+      }
+      form {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: end;
+      }
+      form h3 {
+        width: 100%;
+        margin: 0;
+        font-size: 14px;
+      }
+      label {
+        display: flex;
+        flex-direction: column;
+        font-size: 13px;
+        color: var(--muted);
+        flex: 1 1 140px;
+      }
+      input,
+      select,
+      textarea {
+        font: inherit;
+        padding: 6px 10px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        background: var(--bg);
+        color: var(--text);
+        min-width: 0;
+      }
+      textarea {
+        width: 100%;
+        font-family: ui-monospace, monospace;
+        font-size: 13px;
+      }
+      .table {
+        padding: 0;
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--line);
+        white-space: nowrap;
+      }
+      th {
+        font-size: 12px;
+        color: var(--muted);
+        font-weight: 500;
+      }
+      tr:last-child td {
+        border-bottom: none;
+      }
+      .actions {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      .empty {
+        color: var(--muted);
+        text-align: center;
+      }
+      .pill {
+        background: var(--pill);
+        border-radius: 99px;
+        padding: 2px 8px;
+        font-size: 12px;
+      }
+      .s1,
+      .o2 {
+        color: var(--good);
+      }
+      .s2,
+      .o1 {
+        color: var(--warn);
+      }
+      .s3,
+      .o3,
+      .o4 {
+        color: var(--muted);
+      }
+      .tick {
+        font-variant-numeric: tabular-nums;
+      }
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 12px;
+      }
+      .card {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .big {
+        font-size: 34px;
+        font-weight: 700;
+      }
+      .notice,
+      .banner {
+        background: var(--pill);
+        border-radius: 8px;
+        padding: 10px 12px;
+      }
+      .banner {
+        border-left: 4px solid var(--warn);
+        margin-bottom: 12px;
+      }
+      #toast {
+        position: fixed;
+        left: 50%;
+        bottom: 20px;
+        transform: translate(-50%, 200%);
+        background: var(--text);
+        color: var(--bg);
+        padding: 10px 16px;
+        border-radius: 10px;
+        max-width: min(560px, calc(100vw - 32px));
+        transition: transform 0.2s;
+      }
+      #toast.show {
+        transform: translate(-50%, 0);
+      }
+      #toast.bad {
+        background: var(--bad);
+        color: #fff;
+      }
+      #toast a {
+        color: inherit;
+      }
+      footer {
+        color: var(--muted);
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>StreamArc <small>Payroll on Arc, paid every second in USDC</small></h1>
+      <span id="balance"></span>
+      <span id="who"></span>
+      <button id="connect">Connect wallet</button>
+    </header>
+    <nav>
+      <button data-tab="employer">Employer</button>
+      <button data-tab="employee">Employee</button>
+    </nav>
+    <main>
+      <div class="banner" id="not-deployed" hidden>
+        PayrollVault isn't deployed on this network yet. Run <code>./deploy-arc.sh</code> or add
+        <code>?payroll=0x…</code> to the URL.
+      </div>
+
+      <section id="employer">
+        <div class="banner" id="runway-warn" hidden>
+          Less than a week of payroll left in the pool. Top up so your team keeps getting paid.
+        </div>
+        <div class="stats" id="stats"></div>
+
+        <h2>Fund payroll</h2>
+        <div class="grid2">
+          <form id="deposit-form">
+            <h3>Deposit USDC</h3>
+            <label
+              >Amount<input name="amount" type="number" min="0.000001" step="any" required placeholder="10000"
+            /></label>
+            <button class="primary">Deposit</button>
+          </form>
+          <form id="withdraw-form">
+            <h3>Withdraw unused funds</h3>
+            <label
+              >Amount<input name="amount" type="number" min="0.000001" step="any" required placeholder="500"
+            /></label>
+            <button>Withdraw</button>
+          </form>
+        </div>
+
+        <h2>Hire</h2>
+        <div class="grid2">
+          <form id="offer-form">
+            <h3>Send an offer</h3>
+            <label style="flex-basis: 100%">Employee wallet<input name="employee" required placeholder="0x…" /></label>
+            <label
+              >Monthly salary (USDC)<input
+                name="monthly"
+                type="number"
+                min="0.000001"
+                step="any"
+                required
+                placeholder="3000"
+            /></label>
+            <label
+              >Paid
+              <select name="period">
+                <option value="0">Every second</option>
+                <option value="604800">Weekly</option>
+                <option value="2592000">Every 30 days</option>
+              </select></label
+            >
+            <label>Expires in (days, 0 = never)<input name="expires" type="number" min="0" value="7" /></label>
+            <button class="primary">Send offer</button>
+          </form>
+          <form id="bulk-form">
+            <h3>Bulk offers</h3>
+            <label style="flex-basis: 100%"
+              >One per line: address, monthly USDC, schedule (continuous / weekly / monthly)
+              <textarea name="csv" rows="4" placeholder="0xabc…,3000,continuous&#10;0xdef…,4500,monthly"></textarea>
+            </label>
+            <button class="primary">Send all</button>
+          </form>
+        </div>
+
+        <h2>Team</h2>
+        <div class="table">
+          <table>
+            <thead>
+              <tr>
+                <th>Stream</th>
+                <th>Employee</th>
+                <th>Salary / mo</th>
+                <th>Paid</th>
+                <th>Status</th>
+                <th>Earned</th>
+                <th>Next payday</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="team"></tbody>
+          </table>
+        </div>
+
+        <h2>Offers sent</h2>
+        <div class="table">
+          <table>
+            <thead>
+              <tr>
+                <th>Offer</th>
+                <th>Employee</th>
+                <th>Salary / mo</th>
+                <th>Paid</th>
+                <th>Expires</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="sent"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="employee" hidden>
+        <h2>Offers for you</h2>
+        <div class="cards" id="inbox"></div>
+        <h2>Your pay</h2>
+        <div class="cards" id="pay"></div>
+      </section>
+    </main>
+    <footer>
+      PayrollVault <span id="contract"></span> on <span id="net"></span> · gas is paid in USDC ·
+      <a href="https://faucet.circle.com" target="_blank" rel="noopener">get test USDC</a> ·
+      <a href="https://github.com/Raveesh1007/StreamArc" target="_blank" rel="noopener">source</a>
+    </footer>
+    <div id="toast"></div>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

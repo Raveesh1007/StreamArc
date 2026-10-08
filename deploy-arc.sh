@@ -63,6 +63,12 @@ F_LL="$(echo "$OUT" | addr "FactoryMerkleLL")"
 F_LT="$(echo "$OUT" | addr "FactoryMerkleLT")"
 F_VCA="$(echo "$OUT" | addr "FactoryMerkleVCA")"
 
+echo "==> Payroll"
+OUT="$(cd "$ROOT/payroll" && forge script script/DeployPayroll.s.sol \
+  --rpc-url "$RPC_URL" --private-key "$PRIVATE_KEY" --broadcast --slow 2>&1)"
+echo "$OUT" | grep -E "PayrollVault" || { echo "$OUT"; exit 1; }
+PAYROLL="$(echo "$OUT" | addr "PayrollVault")"
+
 mkdir -p "$ROOT/deployments"
 FILE="$ROOT/deployments/arc-$CHAIN_ID.json"
 cat > "$FILE" <<EOF
@@ -80,8 +86,31 @@ cat > "$FILE" <<EOF
   "factoryMerkleInstant": "$F_INSTANT",
   "factoryMerkleLL": "$F_LL",
   "factoryMerkleLT": "$F_LT",
-  "factoryMerkleVCA": "$F_VCA"
+  "factoryMerkleVCA": "$F_VCA",
+  "payrollVault": "$PAYROLL"
 }
 EOF
+
+if [ "$CHAIN_ID" = 5042 ]; then
+  NET="Arc" PUB_RPC="https://rpc.mainnet.arc.io" EXPLORER="https://explorer.arc.io"
+else
+  NET="Arc Testnet" PUB_RPC="https://rpc.testnet.arc.network" EXPLORER="https://explorer.testnet.arc.io"
+fi
+case "$RPC_URL" in
+  *127.0.0.1* | *localhost*) ;;
+  *)
+    cat > "$ROOT/app/config.js" <<EOF
+export default {
+  chainId: $CHAIN_ID,
+  name: "$NET",
+  rpc: "$PUB_RPC",
+  explorer: "$EXPLORER",
+  usdc: "0x3600000000000000000000000000000000000000",
+  payroll: "$PAYROLL",
+};
+EOF
+    echo "==> App config written to app/config.js"
+    ;;
+esac
 echo "==> Done. Addresses written to $FILE"
 cat "$FILE"
