@@ -75,5 +75,5 @@ for a read-only view. Local demo needs a token at Arc's USDC address:
 - Arc Microgrants (DoraHacks), deadline ~2026-10-14. Must be live on Arc **mainnet** with a public repo and a working
   link.
 - ETHGlobal (Arc track). Pre-hackathon baseline is commit `74dad1f`; work after it counts as hackathon work.
-- Status (2026-10-08): app + payroll tested end to end on local anvil only. Not yet deployed to testnet or mainnet
-  (needs a funded key), Pages not yet enabled.
+- Status (2026-10-09): full suite live on testnet (PayrollVault `0xe9C616E7604b39D11851Ae0467077b10E5111685`); Lockup, Flow
+  and PayrollVault checked with real USDC via cast. Not yet on mainnet, Pages not yet enabled.
