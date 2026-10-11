@@ -27,3 +27,8 @@ package-lock.json
 pnpm-lock.yaml
 yarn.lock
 
+
+# app
+dist/
+*.tsbuildinfo
+!app/package-lock.json
