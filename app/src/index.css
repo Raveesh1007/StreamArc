@@ -1,0 +1,295 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "@fontsource-variable/bricolage-grotesque";
+@import "@fontsource-variable/instrument-sans";
+@import "@fontsource-variable/jetbrains-mono";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --radius: 0.625rem;
+  --background: #f4f4f1;
+  --foreground: #0d0f12;
+  --card: #ffffff;
+  --card-foreground: #0d0f12;
+  --popover: #ffffff;
+  --popover-foreground: #0d0f12;
+  --primary: #0f9d58;
+  --primary-foreground: #ffffff;
+  --secondary: #ebebe7;
+  --secondary-foreground: #0d0f12;
+  --muted: #efefeb;
+  --muted-foreground: #5d636d;
+  --accent: #e8e8e3;
+  --accent-foreground: #0d0f12;
+  --destructive: #d92d20;
+  --warning: #b26a00;
+  --border: #e0e0da;
+  --input: #d6d6cf;
+  --ring: #0f9d58;
+  --usdc: #0b53bf;
+  --usdc-bright: #0b53bf;
+  --arc-gold: #b4661f;
+  --arc-coral: #f3966f;
+  --ascii: #c4c5bd;
+  --glow: transparent;
+}
+
+.dark {
+  --background: #07080a;
+  --foreground: #eceef1;
+  --card: #0c0e11;
+  --card-foreground: #eceef1;
+  --popover: #0f1115;
+  --popover-foreground: #eceef1;
+  --primary: #6ef2a6;
+  --primary-foreground: #03140a;
+  --secondary: #15181d;
+  --secondary-foreground: #eceef1;
+  --muted: #121418;
+  --muted-foreground: #8b929d;
+  --accent: #171a20;
+  --accent-foreground: #eceef1;
+  --destructive: #ff6363;
+  --warning: #f5b85c;
+  --border: #1c2027;
+  --input: #232831;
+  --ring: #6ef2a6;
+  --usdc-bright: #4d8ff5;
+  --arc-gold: #f3ca94;
+  --ascii: #34473c;
+  --glow: color-mix(in oklab, var(--primary) 45%, transparent);
+}
+
+@theme inline {
+  --font-sans: "Instrument Sans Variable", ui-sans-serif, sans-serif;
+  --font-display: "Bricolage Grotesque Variable", ui-sans-serif, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-warning: var(--warning);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-usdc: var(--usdc);
+  --color-usdc-bright: var(--usdc-bright);
+  --color-arc-gold: var(--arc-gold);
+  --color-arc-coral: var(--arc-coral);
+  --color-ascii: var(--ascii);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --animate-rise: rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  --animate-flow: flow 1.6s linear infinite;
+  --animate-pulse-dot: pulse-dot 2s ease-out infinite;
+  --animate-bar: bar 2.4s ease-in-out infinite alternate;
+  --animate-fill: fill 3s linear infinite;
+  --animate-step: step 3s steps(1) infinite;
+  --animate-draw: draw 4s ease-in-out infinite;
+  --animate-stripes: stripes 1s linear infinite;
+  --animate-tilt: tilt 7s ease-in-out infinite;
+  --animate-cycle: cycle 6s ease-in-out infinite;
+  --animate-row: row 4.5s ease-out infinite;
+  --animate-node: node 3s ease-in-out infinite;
+}
+
+@keyframes bar {
+  from {
+    transform: scaleY(0.35);
+  }
+}
+
+@keyframes fill {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes step {
+  0%,
+  100% {
+    opacity: 0.15;
+  }
+  25% {
+    opacity: 1;
+  }
+}
+
+@keyframes draw {
+  0% {
+    stroke-dashoffset: 1;
+  }
+  55%,
+  85% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: -1;
+  }
+}
+
+@keyframes stripes {
+  to {
+    background-position: 16px 0;
+  }
+}
+
+@keyframes tilt {
+  0%,
+  100% {
+    transform: perspective(900px) rotateY(-14deg) rotateX(8deg);
+  }
+  50% {
+    transform: perspective(900px) rotateY(14deg) rotateX(-4deg);
+  }
+}
+
+@keyframes cycle {
+  0%,
+  10% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  20%,
+  80% {
+    opacity: 1;
+    transform: none;
+  }
+  90%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes row {
+  0% {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  15%,
+  85% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes node {
+  0%,
+  100% {
+    fill: var(--card);
+    stroke: var(--border);
+  }
+  30%,
+  60% {
+    fill: color-mix(in oklab, var(--primary) 25%, var(--card));
+    stroke: var(--primary);
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+@keyframes flow {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+
+@keyframes pulse-dot {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--primary) 60%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 8px transparent;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-display tracking-tight;
+  }
+}
+
+@utility bg-grid {
+  background-image:
+    linear-gradient(to right, color-mix(in oklab, var(--foreground) 5%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklab, var(--foreground) 5%, transparent) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+
+@utility text-glow {
+  text-shadow: 0 0 32px var(--glow);
+}
+
+@utility stripes {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    color-mix(in oklab, var(--warning) 35%, transparent) 0 4px,
+    transparent 4px 8px
+  );
+  background-size: 16px 100%;
+}
+
+@utility spotlight {
+  background-image: radial-gradient(
+    420px circle at var(--x, 50%) var(--y, -40%),
+    color-mix(in oklab, var(--primary) 9%, transparent),
+    transparent 60%
+  );
+}
+
+@utility reveal {
+  opacity: 0;
+  &[data-in] {
+    opacity: 1;
+    animation: rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
