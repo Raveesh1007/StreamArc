@@ -25,7 +25,7 @@ deploy commands; each package has its own `AGENTS.md` with protocol concepts.
 | `flow`     | `StreamArcFlow`, `FlowNFTDescriptor` (open-ended streams, debt tracking)   | `DeployArcFlow.s.sol`        |
 | `airdrops` | 5 Merkle factories: Instant, LL, LT, VCA, Execute                          | `DeployArcAirdrops.s.sol`    |
 | `payroll`  | `PayrollVault`: per-second USDC payroll (offers, payday schedules, runway) | `script/DeployPayroll.s.sol` |
-| `app`      | Static web app for PayrollVault (viem from esm.sh, no build step)          | n/a                          |
+| `app`      | Web app: landing (`/`) + dashboard (`/app/`); Vite, React, shadcn/ui        | n/a                          |
 
 `lockup`, `flow`, `airdrops` depend on `@streamarc/evm-utils` (`file:../utils`); `airdrops` also on `@streamarc/lockup`
 (`file:../lockup`). Remappings point into each package's `node_modules/`.
@@ -44,9 +44,21 @@ cd lockup && FOUNDRY_PROFILE=lite forge test --match-test <name>
 Expected: 1,482 pass (utils 200, lockup 616, flow 268, airdrops 398). `payroll` is standalone (forge-std vendored in
 `payroll/lib`, no bun): `cd payroll && forge test`, 22 pass.
 
-App: `cd app && python -m http.server 8787`. URL params override `config.js`: `?rpc=`, `?payroll=`, and `?as=<address>`
-for a read-only view. Local demo needs a token at Arc's USDC address:
+App: `cd app && npm install && npm run dev` (build: `npm run build` → `app/dist`). URL params override `config.js`:
+`?rpc=`, `?payroll=`, and `?as=<address>` for a read-only view. Local demo needs a token at Arc's USDC address:
 `cast rpc anvil_setCode 0x3600…0000 "$(cd payroll && forge inspect MockUSDC deployedBytecode)"`.
+
+## App design system
+
+- Every page uses the tokens in `app/src/index.css` (light + `.dark`, toggled in `SiteHeader`, saved in localStorage) and
+  the shared `SiteHeader` / `SiteFooter`. Never hard-code colors; check new UI in both themes. Fonts: Bricolage
+  Grotesque (headings), Instrument Sans (body), JetBrains Mono (numbers, labels).
+- UI primitives come from shadcn/ui in `src/components/ui`; add more with `npx shadcn@latest add <name>`, then fix
+  the CLI's `from "cn"` import to `@/lib/utils`. Contract reads, formatting and ABIs live only in `src/lib/vault.ts`.
+- Arc and USDC logos are the official files in `src/assets/brand` (white for dark, black for light via `brand.tsx`).
+- `AsciiCoin` (three.js + AsciiEffect, lazy-loaded) renders 3D coins from the official logo paths. Section tiles use
+  `Tile` from `src/landing/bento.tsx`; animations are keyframes in `index.css`.
+- Check layouts at 390px wide; headless Chrome can't go below ~500px, so render the page in a 390px iframe.
 
 ## Gotchas
 

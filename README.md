@@ -18,12 +18,13 @@ airdrops that vest over time.
 
 ```bash
 cd payroll && forge test
-cd app && python -m http.server 8787
+cd app && npm install && npm run dev
 ```
 
-The app is static (no build step). `deploy-arc.sh` writes the vault address into `app/config.js`. The
-`App: GitHub Pages` workflow publishes `app/` on every push to `main` once Pages is set to "GitHub Actions". For a local
-chain, open `http://localhost:8787/?rpc=http://127.0.0.1:8545&payroll=<vault>`. Add `&as=<address>` to view any account
+The app is a Vite + React site: a landing page at `/` and the dashboard at `/app/`. `deploy-arc.sh` writes the vault
+address into `app/config.js`. The `App: GitHub Pages` workflow builds and publishes it on every push to `main` once
+Pages is set to "GitHub Actions". For a local chain, open
+`http://localhost:5173/app/?rpc=http://127.0.0.1:8545&payroll=<vault>`. Add `&as=<address>` to view any account
 read-only.
 
 ## Streaming contracts
