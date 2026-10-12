@@ -22,8 +22,7 @@ cd app && npm install && npm run dev
 ```
 
 The app is a Vite + React site: a landing page at `/` and the dashboard at `/app/`. `deploy-arc.sh` writes the vault
-address into `app/config.js`. The `App: GitHub Pages` workflow builds and publishes it on every push to `main` once
-Pages is set to "GitHub Actions". For a local chain, open
+address into `app/config.js`. It deploys on Vercel with Root Directory `app` (Vite preset, output `dist`). For a local chain, open
 `http://localhost:5173/app/?rpc=http://127.0.0.1:8545&payroll=<vault>`. Add `&as=<address>` to view any account
 read-only.
 
