@@ -79,8 +79,7 @@ App: `cd app && npm install && npm run dev` (build: `npm run build` → `app/dis
   `https://explorer.arc.io`. Both explorers are Blockscout.
 - App sends txs with its own gas estimate +20%; node estimates were too tight for USDC `transferFrom`.
 - `ARC.md` names the original protocol, so it stays uncommitted (see the Naming rule).
-- CI: `ci-payroll.yml` runs payroll tests; `pages.yml` publishes `app/` to GitHub Pages (Settings → Pages → Source:
-  GitHub Actions) at `https://raveesh1007.github.io/StreamArc/`.
+- CI: `ci-payroll.yml` runs payroll tests. The app deploys on Vercel (project Root Directory `app`, Vite preset).
 
 ## Hackathon
 
@@ -88,4 +87,4 @@ App: `cd app && npm install && npm run dev` (build: `npm run build` → `app/dis
   link.
 - ETHGlobal (Arc track). Pre-hackathon baseline is commit `74dad1f`; work after it counts as hackathon work.
 - Status (2026-10-09): full suite live on testnet (PayrollVault `0xe9C616E7604b39D11851Ae0467077b10E5111685`); Lockup, Flow
-  and PayrollVault checked with real USDC via cast. Not yet on mainnet, Pages not yet enabled.
+  and PayrollVault checked with real USDC via cast. Not yet on mainnet. App deployed on Vercel.
