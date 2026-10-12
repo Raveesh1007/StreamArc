@@ -5,12 +5,21 @@ import arcLogoWhite from "@/assets/brand/arc-logo-white.svg";
 import usdcLockupInverse from "@/assets/brand/usdc-lockup-inverse.svg";
 import usdcLockup from "@/assets/brand/usdc-lockup.svg";
 import usdcToken from "@/assets/brand/usdc-token.svg";
+import { useId } from "react";
 import { cn } from "@/lib/utils";
 
 export function Mark({ className }: { className?: string }) {
+  const id = useId();
   return (
     <svg viewBox="0 0 32 32" className={cn("size-7", className)} aria-hidden>
-      <rect width="32" height="32" rx="8" fill="var(--primary)" />
+      <defs>
+        <linearGradient id={id} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="var(--primary)" />
+          <stop offset="0.55" stopColor="var(--cyan)" />
+          <stop offset="1" stopColor="var(--usdc-bright)" />
+        </linearGradient>
+      </defs>
+      <rect width="32" height="32" rx="8" fill={`url(#${id})`} />
       <path
         d="M7 12.5c3-3.2 6 3.2 9 0s6-3.2 9 0M7 19.5c3-3.2 6 3.2 9 0s6-3.2 9 0"
         fill="none"
