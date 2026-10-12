@@ -50,14 +50,14 @@ export function Dashboard() {
             {usd(q.data.wallet)}
           </span>
         )}
-        <Button size="sm" variant={connected ? "outline" : "default"} onClick={() => open()}>
+        <Button size="sm" className="rounded-full" variant={connected ? "outline" : "default"} onClick={() => open()}>
           {connected && account ? <span className="font-mono">{short(account)}</span> : "Connect wallet"}
         </Button>
       </SiteHeader>
 
       <main className="relative min-w-0 flex-1">
         <div className="bg-grid pointer-events-none absolute inset-x-0 top-0 h-72 [mask-image:linear-gradient(black,transparent)]" />
-        <div className="relative mx-auto max-w-6xl px-4 py-10 sm:px-6">
+        <div className="relative mx-auto max-w-6xl px-4 pt-24 pb-10 sm:px-6">
           <div className="flex flex-wrap items-end justify-between gap-6">
             <div>
               <p className="font-mono text-xs tracking-[0.2em] text-primary uppercase">Payroll</p>
