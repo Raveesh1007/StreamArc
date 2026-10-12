@@ -30,35 +30,51 @@
   --usdc: #0b53bf;
   --usdc-bright: #0b53bf;
   --arc-gold: #b4661f;
-  --arc-coral: #f3966f;
+  --arc-coral: #e8603c;
+  --cyan: #0891b2;
+  --violet: #7c3aed;
   --ascii: #c4c5bd;
   --glow: transparent;
+  --aurora: linear-gradient(100deg, var(--primary), var(--cyan) 28%, var(--usdc-bright) 52%, var(--violet) 76%, var(--arc-coral));
+  --sky:
+    radial-gradient(60% 50% at 80% 0%, color-mix(in oklab, var(--arc-coral) 22%, transparent), transparent 70%),
+    radial-gradient(50% 45% at 15% 5%, color-mix(in oklab, var(--usdc-bright) 16%, transparent), transparent 70%),
+    radial-gradient(40% 40% at 50% 100%, color-mix(in oklab, var(--violet) 10%, transparent), transparent 70%);
+  --beam-strength: 14%;
 }
 
 .dark {
-  --background: #07080a;
+  --background: #05060f;
   --foreground: #eceef1;
-  --card: #0c0e11;
+  --card: #0a0c19;
   --card-foreground: #eceef1;
-  --popover: #0f1115;
+  --popover: #0d1020;
   --popover-foreground: #eceef1;
   --primary: #6ef2a6;
   --primary-foreground: #03140a;
-  --secondary: #15181d;
+  --secondary: #141829;
   --secondary-foreground: #eceef1;
-  --muted: #121418;
-  --muted-foreground: #8b929d;
-  --accent: #171a20;
+  --muted: #10132a;
+  --muted-foreground: #8f95ae;
+  --accent: #161a2d;
   --accent-foreground: #eceef1;
   --destructive: #ff6363;
   --warning: #f5b85c;
-  --border: #1c2027;
-  --input: #232831;
+  --border: #1b2038;
+  --input: #252b47;
   --ring: #6ef2a6;
   --usdc-bright: #4d8ff5;
   --arc-gold: #f3ca94;
+  --arc-coral: #ff8f6b;
+  --cyan: #5ce1e6;
+  --violet: #a98bff;
   --ascii: #34473c;
   --glow: color-mix(in oklab, var(--primary) 45%, transparent);
+  --sky:
+    radial-gradient(55% 55% at 85% -5%, color-mix(in oklab, var(--violet) 26%, transparent), transparent 70%),
+    radial-gradient(50% 50% at 10% 0%, color-mix(in oklab, var(--usdc-bright) 24%, transparent), transparent 70%),
+    radial-gradient(45% 40% at 50% 105%, color-mix(in oklab, var(--cyan) 14%, transparent), transparent 70%);
+  --beam-strength: 24%;
 }
 
 @theme inline {
@@ -88,6 +104,8 @@
   --color-usdc-bright: var(--usdc-bright);
   --color-arc-gold: var(--arc-gold);
   --color-arc-coral: var(--arc-coral);
+  --color-cyan: var(--cyan);
+  --color-violet: var(--violet);
   --color-ascii: var(--ascii);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -105,6 +123,25 @@
   --animate-cycle: cycle 6s ease-in-out infinite;
   --animate-row: row 4.5s ease-out infinite;
   --animate-node: node 3s ease-in-out infinite;
+  --animate-aurora: aurora 8s ease-in-out infinite alternate;
+  --animate-beam: beam 9s ease-in-out infinite alternate;
+}
+
+@keyframes aurora {
+  to {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes beam {
+  from {
+    opacity: 0.55;
+    transform: rotate(-3deg);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(3deg);
+  }
 }
 
 @keyframes bar {
@@ -206,7 +243,7 @@
 @keyframes rise {
   from {
     opacity: 0;
-    transform: translateY(14px);
+    translate: 0 14px;
   }
 }
 
@@ -258,6 +295,48 @@
   background-size: 56px 56px;
 }
 
+@utility bg-aurora {
+  background-image: var(--aurora);
+  background-size: 200% 100%;
+}
+
+@utility text-aurora {
+  background-image: var(--aurora);
+  background-size: 200% 100%;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility bg-sky {
+  background-image: var(--sky);
+}
+
+@utility beams {
+  background-image: conic-gradient(
+    from 180deg at 50% -20%,
+    transparent 152deg,
+    color-mix(in oklab, var(--usdc-bright) var(--beam-strength), transparent) 160deg,
+    transparent 166deg,
+    color-mix(in oklab, var(--cyan) var(--beam-strength), transparent) 174deg,
+    transparent 178deg,
+    color-mix(in oklab, var(--violet) var(--beam-strength), transparent) 186deg,
+    transparent 194deg,
+    color-mix(in oklab, var(--arc-coral) var(--beam-strength), transparent) 201deg,
+    transparent 210deg
+  );
+  filter: blur(14px);
+  transform-origin: 50% 0;
+}
+
+@utility horizon {
+  border-radius: 50%;
+  border-top: 1px solid color-mix(in oklab, var(--cyan) 70%, transparent);
+  background: radial-gradient(70% 60% at 50% 0%, color-mix(in oklab, var(--usdc-bright) 22%, transparent), transparent 70%);
+  box-shadow:
+    0 -2px 24px -4px color-mix(in oklab, var(--cyan) 70%, transparent),
+    0 -30px 120px -20px color-mix(in oklab, var(--violet) 55%, transparent);
+}
+
 @utility text-glow {
   text-shadow: 0 0 32px var(--glow);
 }
@@ -271,12 +350,160 @@
   background-size: 16px 100%;
 }
 
-@utility spotlight {
-  background-image: radial-gradient(
-    420px circle at var(--x, 50%) var(--y, -40%),
-    color-mix(in oklab, var(--primary) 9%, transparent),
-    transparent 60%
-  );
+@property --px {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0.5;
+}
+
+@property --py {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0.5;
+}
+
+@keyframes holo-sweep {
+  0% {
+    opacity: 0;
+    --px: -0.2;
+    --py: 0;
+  }
+  35% {
+    opacity: var(--peak);
+  }
+  100% {
+    opacity: 0;
+    --px: 1.2;
+    --py: 1;
+  }
+}
+
+@layer components {
+  .notch {
+    --glass: color-mix(in oklab, var(--background) 52%, transparent);
+    --glass-edge: rgb(255 255 255 / 0.75);
+    --glass-blur: blur(20px) saturate(190%) brightness(1.04);
+    position: relative;
+    border-radius: 0 0 20px 20px;
+    background:
+      linear-gradient(to bottom, rgb(255 255 255 / 0.28), transparent 55%),
+      var(--glass);
+    backdrop-filter: var(--glass-blur);
+    box-shadow:
+      inset 0 -1px 0 var(--glass-edge),
+      inset 1px 0 0 rgb(255 255 255 / 0.25),
+      inset -1px 0 0 rgb(255 255 255 / 0.25),
+      0 0 0 0.5px rgb(0 0 0 / 0.08),
+      0 12px 32px -8px rgb(0 0 0 / 0.18);
+  }
+  .notch::before,
+  .notch::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    width: 20px;
+    height: 20px;
+    background: var(--glass);
+    backdrop-filter: var(--glass-blur);
+  }
+  .notch::before {
+    right: 100%;
+    mask-image: radial-gradient(circle at 0 100%, transparent 19.5px, #000 20px);
+  }
+  .notch::after {
+    left: 100%;
+    mask-image: radial-gradient(circle at 100% 100%, transparent 19.5px, #000 20px);
+  }
+  .dark .notch {
+    --glass: color-mix(in oklab, var(--background) 45%, transparent);
+    --glass-edge: rgb(255 255 255 / 0.22);
+    --glass-blur: blur(20px) saturate(170%) brightness(1.1);
+    background:
+      linear-gradient(to bottom, rgb(255 255 255 / 0.07), transparent 60%),
+      var(--glass);
+    box-shadow:
+      inset 0 -1px 0 var(--glass-edge),
+      inset 1px 0 0 rgb(255 255 255 / 0.08),
+      inset -1px 0 0 rgb(255 255 255 / 0.08),
+      0 0 0 0.5px rgb(255 255 255 / 0.06),
+      0 14px 40px -10px rgb(0 0 0 / 0.7);
+  }
+  .holo {
+    transform: perspective(1000px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+    transition:
+      transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1),
+      box-shadow 0.4s,
+      border-color 0.4s;
+  }
+  .holo-foil,
+  .holo-glare {
+    --at: calc(var(--px) * 100%) calc(var(--py) * 100%);
+    --peak: 1;
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  .holo-foil {
+    --peak: 0.7;
+    background-image:
+      repeating-linear-gradient(-45deg, transparent 0 3px, var(--holo-line, rgb(0 0 0 / 0.06)) 3px 4px),
+      repeating-linear-gradient(
+        115deg,
+        #ff8fbf 0%,
+        #ffd88f 6%,
+        #a9ffb0 12%,
+        #8ff0ff 18%,
+        #9d94ff 24%,
+        #ff8fe8 30%,
+        #ff8fbf 36%
+      );
+    background-size:
+      100% 100%,
+      200% 200%;
+    background-position:
+      0 0,
+      var(--at);
+    mask-image: radial-gradient(circle at var(--at), black, transparent 75%);
+    mix-blend-mode: multiply;
+    filter: saturate(2.2);
+  }
+  .holo-glare {
+    background: radial-gradient(circle at var(--at), rgb(255 255 255 / 0.55), transparent 50%);
+    mix-blend-mode: soft-light;
+  }
+  .dark .holo-foil {
+    --peak: 0.3;
+    --holo-line: rgb(255 255 255 / 0.1);
+    mix-blend-mode: screen;
+    filter: none;
+  }
+  .dark .holo-glare {
+    mix-blend-mode: overlay;
+  }
+  @media (hover: hover) {
+    .holo:hover {
+      transition-duration: 0.12s, 0.4s, 0.4s;
+      border-color: color-mix(in oklab, var(--foreground) 22%, var(--border));
+      box-shadow: 0 24px 60px -24px rgb(0 0 0 / 0.35);
+    }
+    .dark .holo:hover {
+      box-shadow: 0 24px 70px -28px rgb(0 0 0 / 0.9);
+    }
+    .holo:hover > .holo-foil,
+    .holo:hover > .holo-glare {
+      opacity: var(--peak);
+    }
+  }
+  @media (hover: none) {
+    .holo[data-view] > .holo-foil,
+    .holo[data-view] > .holo-glare {
+      animation: holo-sweep 1.6s 0.35s ease-out both;
+    }
+  }
 }
 
 @utility reveal {
@@ -292,6 +519,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .holo {
+    transform: none;
+  }
+
   *,
   *::before,
   *::after {
