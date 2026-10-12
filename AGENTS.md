@@ -81,10 +81,22 @@ App: `cd app && npm install && npm run dev` (build: `npm run build` → `app/dis
 - `ARC.md` names the original protocol, so it stays uncommitted (see the Naming rule).
 - CI: `ci-payroll.yml` runs payroll tests. The app deploys on Vercel (project Root Directory `app`, Vite preset).
 
-## Hackathon
+## ETHGlobal Mumbai plan
 
-- Arc Microgrants (DoraHacks), deadline ~2026-10-14. Must be live on Arc **mainnet** with a public repo and a working
-  link.
-- ETHGlobal (Arc track). Pre-hackathon baseline is commit `74dad1f`; work after it counts as hackathon work.
-- Status (2026-10-09): full suite live on testnet (PayrollVault `0xe9C616E7604b39D11851Ae0467077b10E5111685`); Lockup, Flow
-  and PayrollVault checked with real USDC via cast. Not yet on mainnet. App deployed on Vercel.
+- **Framework:** migrate the app to Next.js at the start of the build, before adding protocol UIs (porting later means
+  porting twice). Reason: server routes for airdrop CSV → Merkle tree + proof hosting, cached stream listing, and
+  per-stream OG share images. Wallet, three.js and AppKit components stay client-only (`"use client"`). If those
+  server features are dropped, stay on Vite.
+- **ABIs:** generate from forge artifacts (`<pkg>/out/<C>.sol/<C>.json`) into `app/src/abi/*.ts` as `as const`, and
+  commit them (the deploy host has no Foundry). Don't hand-write ABIs for Lockup/Flow; their args are nested structs.
+- **Addresses:** `deploy-arc.sh` writes every address from `deployments/arc-<chainId>.json` into `app/config.js`
+  (not just `payroll`); `lib/chain.ts` exports them as `ADDR`.
+- **Code layout:** one `src/lib/<protocol>.ts` per protocol (`vault.ts`, `lockup.ts`, `flow.ts`, `airdrops.ts`) for
+  reads and formatting. All writes go through `useTx` with `{ address, abi }`; approve USDC to the target contract
+  first.
+- **Listing streams:** Lockup and Flow have no per-address getters. Received streams: Blockscout
+  `/api/v2/addresses/<user>/nft?type=ERC-721` filtered to the Lockup and Flow addresses (verified that it indexes
+  `SAB-LOCKUP`). Created streams: create-event logs filtered by sender.
+- **Airdrops:** the leaf is `keccak256(bytes.concat(keccak256(abi.encode(index, recipient, amount))))`, the same as
+  OpenZeppelin `StandardMerkleTree` with `["uint256", "address", "uint128"]`. Claimers need hosted proofs.
+- **UI:** dashboard tabs Payroll | Vesting | Streams | Airdrops; landing roadmap tiles link to them.
