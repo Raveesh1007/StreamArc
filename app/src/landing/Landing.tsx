@@ -1,6 +1,8 @@
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { useState } from "react";
 import { AsciiCoin } from "@/components/ascii-coin";
+import { AsciiSky } from "@/components/ascii-sky";
+import { HoloCard } from "@/components/holo-card";
 import { ArcIcon, ArcLogo, UsdcLockup, UsdcToken } from "@/components/brand";
 import { LiveAmount } from "@/components/live-amount";
 import { NavLink, SiteHeader } from "@/components/site-header";
@@ -16,6 +18,8 @@ import {
   EarningsVisual,
   FlowVisual,
   GasVisual,
+  hue,
+  type Hue,
   MerkleVisual,
   RunwayVisual,
   ScheduleVisual,
@@ -39,12 +43,12 @@ export function Landing() {
           </>
         }
       >
-        <Button variant="ghost" size="sm" asChild className="hidden sm:inline-flex">
+        <Button variant="ghost" size="sm" asChild className="hidden rounded-full text-foreground/60 sm:inline-flex">
           <a href={REPO}>GitHub</a>
         </Button>
-        <Button size="sm" asChild>
+        <Button size="sm" asChild className="rounded-full bg-foreground text-background hover:bg-foreground/85">
           <a href="./app/">
-            Launch app <ArrowRight />
+            Start <ArrowRight />
           </a>
         </Button>
       </SiteHeader>
@@ -62,10 +66,26 @@ export function Landing() {
   );
 }
 
-function Section({ id, eyebrow, title, intro, children }: { id?: string; eyebrow: string; title: string; intro?: string; children: React.ReactNode }) {
+function Section({
+  id,
+  eyebrow,
+  title,
+  intro,
+  glow = "violet",
+  children,
+}: {
+  id?: string;
+  eyebrow: string;
+  title: string;
+  intro?: string;
+  glow?: Hue;
+  children: React.ReactNode;
+}) {
   return (
-    <section id={id} className="scroll-mt-16 border-t">
-      <div className="mx-auto max-w-6xl px-4 py-24 sm:px-6">
+    <section id={id} style={hue(glow)} className="relative scroll-mt-16 overflow-hidden border-t">
+      <div className="pointer-events-none absolute -top-40 left-1/2 h-80 w-[70rem] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
+      <div className="relative mx-auto max-w-6xl px-4 py-24 sm:px-6">
         <p className="font-mono text-xs tracking-[0.2em] text-primary uppercase">{eyebrow}</p>
         <h2 className="mt-4 max-w-2xl text-4xl font-semibold sm:text-5xl">{title}</h2>
         {intro && <p className="mt-4 max-w-xl text-lg text-muted-foreground">{intro}</p>}
@@ -77,8 +97,11 @@ function Section({ id, eyebrow, title, intro, children }: { id?: string; eyebrow
 
 function Hero() {
   return (
-    <section className="relative overflow-hidden">
-      <div className="relative mx-auto grid max-w-6xl items-center gap-16 px-4 pt-16 pb-20 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:pt-28 [&>*]:min-w-0">
+    <section className="bg-sky relative overflow-hidden">
+      <AsciiSky className="[mask-image:linear-gradient(black_40%,transparent)]" />
+      <div className="beams animate-beam pointer-events-none absolute -top-10 left-1/2 h-[46rem] w-[90rem] -translate-x-1/2" />
+      <div className="horizon pointer-events-none absolute -bottom-[25rem] left-1/2 h-[36rem] w-[150%] -translate-x-1/2 max-lg:hidden" />
+      <div className="relative mx-auto grid max-w-6xl items-center gap-16 px-4 pt-24 pb-20 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:pt-32 [&>*]:min-w-0">
         <div>
           <a
             href="https://docs.arc.io"
@@ -113,12 +136,12 @@ function Hero() {
         <div className="relative pt-36 sm:pt-52 lg:pr-16">
           <AsciiCoin
             logos={["arc", "usdc"]}
-            className="absolute -top-28 -right-28 size-[42rem] [mask-image:radial-gradient(circle,black_50%,transparent_70%)] max-sm:-top-8 max-sm:-right-32 max-sm:size-[26rem]"
+            className="text-aurora animate-aurora opacity-60 dark:opacity-80 absolute -top-28 -right-28 size-[42rem] [mask-image:radial-gradient(circle,black_50%,transparent_70%)] max-sm:-top-8 max-sm:-right-32 max-sm:size-[26rem]"
           />
           <Payslip />
         </div>
       </div>
-      <div className="relative border-t bg-card/40">
+      <div className="relative border-t bg-card/50 backdrop-blur-md">
         <dl className="mx-auto grid max-w-6xl grid-cols-2 px-4 sm:px-6 lg:grid-cols-4">
           {[
             ["$0.001157", "earned per second on a $3k salary"],
@@ -126,8 +149,8 @@ function Hero() {
             ["~$0.01", "gas per transaction, paid in USDC"],
             ["0%", "protocol fees"],
           ].map(([v, k], i) => (
-            <div key={k} className={cn("py-7 pr-4", i > 0 && "lg:border-l lg:pl-8", i % 2 === 1 && "border-l pl-6")}>
-              <dt className="font-mono text-2xl text-foreground">{v}</dt>
+            <div key={k} style={hue(STAT_HUES[i])} className={cn("py-7 pr-4", i > 0 && "lg:border-l lg:pl-8", i % 2 === 1 && "border-l pl-6")}>
+              <dt className="font-mono text-2xl text-primary">{v}</dt>
               <dd className="mt-1 text-sm text-muted-foreground">{k}</dd>
             </div>
           ))}
@@ -137,11 +160,12 @@ function Hero() {
   );
 }
 
+const STAT_HUES: Hue[] = ["primary", "cyan", "usdc-bright", "violet"];
+
 function Payslip() {
   return (
     <div className="animate-rise relative [animation-delay:320ms]">
-      <div className="absolute -inset-px rounded-2xl bg-gradient-to-b from-primary/40 via-border to-transparent" />
-      <div className="relative rounded-2xl bg-card/85 p-6 shadow-2xl shadow-black/20 backdrop-blur-md dark:shadow-black/60">
+      <HoloCard className="bg-card/90 p-6 shadow-2xl shadow-black/20 backdrop-blur-md dark:shadow-black/60">
         <div className="flex items-center justify-between">
           <span className="font-mono text-xs tracking-widest text-muted-foreground uppercase">Live payslip</span>
           <span className="flex items-center gap-2 text-xs text-primary">
@@ -152,12 +176,19 @@ function Payslip() {
           <Party label="Acme pool" sub="Employer" />
           <svg viewBox="0 0 100 8" preserveAspectRatio="none" className="h-2 flex-1" aria-hidden>
             <line x1="0" y1="4" x2="100" y2="4" stroke="var(--border)" strokeWidth="2" />
+            <defs>
+              <linearGradient id="payslip-flow">
+                <stop offset="0" stopColor="var(--primary)" />
+                <stop offset="0.5" stopColor="var(--usdc-bright)" />
+                <stop offset="1" stopColor="var(--violet)" />
+              </linearGradient>
+            </defs>
             <line
               x1="0"
               y1="4"
               x2="100"
               y2="4"
-              stroke="var(--primary)"
+              stroke="url(#payslip-flow)"
               strokeWidth="2"
               strokeDasharray="4 8"
               className="animate-flow"
@@ -182,7 +213,7 @@ function Payslip() {
             </div>
           ))}
         </dl>
-      </div>
+      </HoloCard>
     </div>
   );
 }
@@ -224,6 +255,8 @@ function BuiltOn() {
   );
 }
 
+const STEP_HUES: Hue[] = ["primary", "usdc-bright", "violet"];
+
 function HowItWorks() {
   const steps = [
     ["Fund the pool", "Deposit USDC once. It sits in the PayrollVault contract, not with us."],
@@ -231,13 +264,15 @@ function HowItWorks() {
     ["Pay streams", "Earnings accrue every second. Employees withdraw whatever has unlocked, to any address."],
   ];
   return (
-    <Section id="how" eyebrow="How it works" title="Three steps from wallet to payroll.">
-      <ol className="grid gap-px overflow-hidden rounded-2xl border bg-border md:grid-cols-3">
+    <Section id="how" eyebrow="How it works" title="Three steps from wallet to payroll." glow="usdc-bright">
+      <ol className="grid gap-4 md:grid-cols-3">
         {steps.map(([t, d], i) => (
-          <li key={t} className="bg-background p-8">
-            <span className="font-mono text-sm text-primary">0{i + 1}</span>
-            <h3 className="mt-10 text-2xl font-semibold">{t}</h3>
-            <p className="mt-3 text-muted-foreground">{d}</p>
+          <li key={t} style={hue(STEP_HUES[i])}>
+            <HoloCard className="h-full p-8">
+              <span className="font-mono text-sm text-primary">0{i + 1}</span>
+              <h3 className="mt-10 text-2xl font-semibold">{t}</h3>
+              <p className="mt-3 text-muted-foreground">{d}</p>
+            </HoloCard>
           </li>
         ))}
       </ol>
@@ -252,27 +287,28 @@ function Features() {
       eyebrow="Features"
       title="Fair to the team. Simple for the employer."
       intro="Everything runs in one open-source contract on Arc. No custody, no middleman."
+      glow="primary"
     >
       <div className="grid gap-4 md:grid-cols-6">
         <Tile className="md:col-span-4" title="Paid by the second" desc="Earnings accrue continuously. Nobody waits two weeks for money they've already earned.">
           <EarningsVisual />
         </Tile>
-        <Tile className="md:col-span-2" delay={80} title="Payday schedules" desc="Every second, weekly or every 30 days. Ending early pays the partial period pro rata.">
+        <Tile className="md:col-span-2" delay={80} tone="cyan" title="Payday schedules" desc="Every second, weekly or every 30 days. Ending early pays the partial period pro rata.">
           <ScheduleVisual />
         </Tile>
-        <Tile className="md:col-span-2" delay={0} title="Runway at a glance" desc="What's owed, what's free, monthly burn and how long the pool lasts.">
+        <Tile className="md:col-span-2" delay={0} tone="usdc-bright" title="Runway at a glance" desc="What's owed, what's free, monthly burn and how long the pool lasts.">
           <RunwayVisual />
         </Tile>
-        <Tile className="md:col-span-2" delay={80} title="Debt stays on record" desc="Employers can only withdraw what isn't owed. Back pay is settled first on top-up.">
+        <Tile className="md:col-span-2" delay={80} tone="arc-gold" title="Debt stays on record" desc="Employers can only withdraw what isn't owed. Back pay is settled first on top-up.">
           <DebtVisual />
         </Tile>
-        <Tile className="md:col-span-2" delay={160} title="Consent built in" desc="Raises apply instantly. Cuts and schedule changes wait for the employee.">
+        <Tile className="md:col-span-2" delay={160} tone="violet" title="Consent built in" desc="Raises apply instantly. Cuts and schedule changes wait for the employee.">
           <ConsentVisual />
         </Tile>
-        <Tile className="md:col-span-3" delay={0} title="Bulk offers" desc="Paste wallets and salaries. Everyone gets an offer in a single transaction.">
+        <Tile className="md:col-span-3" delay={0} tone="arc-coral" title="Bulk offers" desc="Paste wallets and salaries. Everyone gets an offer in a single transaction.">
           <BulkVisual />
         </Tile>
-        <Tile className="md:col-span-3" delay={80} title="Gas in USDC" desc="Arc charges gas in USDC, so employees never need a second token to get paid.">
+        <Tile className="md:col-span-3" delay={80} tone="usdc-bright" title="Gas in USDC" desc="Arc charges gas in USDC, so employees never need a second token to get paid.">
           <GasVisual />
         </Tile>
       </div>
@@ -312,7 +348,7 @@ const highlight = (code: string) =>
               ? "text-usdc-bright"
               : t.startsWith(".")
                 ? "text-primary"
-                : "text-muted-foreground"
+                : "text-violet"
         }
       >
         {t}
@@ -328,6 +364,7 @@ function Developers() {
       eyebrow="Developers"
       title="One contract. A handful of calls."
       intro="PayrollVault is plain Solidity on Arc. Integrate payroll into your own product with viem in a few lines."
+      glow="cyan"
     >
       <div className="grid gap-10 lg:grid-cols-[1fr_1.3fr]">
         <ul className="space-y-6 text-muted-foreground">
@@ -348,7 +385,7 @@ function Developers() {
             </a>
           </Button>
         </ul>
-        <div className="overflow-hidden rounded-2xl border bg-card">
+        <HoloCard>
           <div className="flex items-center gap-1 border-b px-3">
             {(Object.keys(SNIPPETS) as (keyof typeof SNIPPETS)[]).map((k) => (
               <button
@@ -366,7 +403,7 @@ function Developers() {
           <pre className="overflow-x-auto p-6 font-mono text-[13px] leading-6 text-foreground/90">
             <code>{highlight(SNIPPETS[tab])}</code>
           </pre>
-        </div>
+        </HoloCard>
       </div>
     </Section>
   );
@@ -374,18 +411,18 @@ function Developers() {
 
 function Roadmap() {
   return (
-    <Section id="roadmap" eyebrow="Roadmap" title="Payroll is the first stream." intro="The same streaming engine powers what comes next.">
+    <Section id="roadmap" eyebrow="Roadmap" title="Payroll is the first stream." intro="The same streaming engine powers what comes next." glow="arc-coral">
       <div className="grid gap-4 md:grid-cols-6">
-        <Tile className="md:col-span-4" badge="Contracts ready" title="Vesting grants" desc="USDC and token grants with cliffs, cliff unlocks and linear vesting.">
+        <Tile className="md:col-span-4" badge="Contracts ready" tone="violet" title="Vesting grants" desc="USDC and token grants with cliffs, cliff unlocks and linear vesting.">
           <VestingVisual />
         </Tile>
-        <Tile className="md:col-span-2" delay={80} badge="Contracts ready" title="Open-ended streams" desc="Retainers and subscriptions with top-ups, pauses and refunds.">
+        <Tile className="md:col-span-2" delay={80} badge="Contracts ready" tone="cyan" title="Open-ended streams" desc="Retainers and subscriptions with top-ups, pauses and refunds.">
           <FlowVisual />
         </Tile>
-        <Tile className="md:col-span-2" delay={0} badge="Contracts ready" title="Vesting airdrops" desc="Distribute to thousands of wallets from a Merkle list, vesting over time.">
+        <Tile className="md:col-span-2" delay={0} badge="Contracts ready" tone="arc-coral" title="Vesting airdrops" desc="Distribute to thousands of wallets from a Merkle list, vesting over time.">
           <MerkleVisual />
         </Tile>
-        <Tile className="md:col-span-4" delay={80} badge="Exploring" title="Salary advances" desc="Every stream is an NFT. Borrow against future pay, transparently on-chain.">
+        <Tile className="md:col-span-4" delay={80} badge="Exploring" tone="arc-gold" title="Salary advances" desc="Every stream is an NFT. Borrow against future pay, transparently on-chain.">
           <AdvanceVisual />
         </Tile>
       </div>
@@ -395,10 +432,13 @@ function Roadmap() {
 
 function Cta() {
   return (
-    <section className="relative overflow-hidden border-t">
+    <section className="bg-sky relative overflow-hidden border-t">
+      <AsciiSky density={0.8} className="[mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]" />
+      <div className="beams animate-beam pointer-events-none absolute -top-10 left-1/2 h-[40rem] w-[80rem] -translate-x-1/2" />
+      <div className="horizon pointer-events-none absolute -bottom-[28rem] left-1/2 h-[34rem] w-[140%] -translate-x-1/2" />
       <AsciiCoin
-        logos={["usdc"]}
-        className="absolute top-1/2 left-1/2 size-[40rem] -translate-x-1/2 -translate-y-1/2 opacity-70 [mask-image:radial-gradient(circle,black_35%,transparent_70%)]"
+        logos={["arc", "usdc"]}
+        className="text-aurora animate-aurora absolute top-1/2 left-1/2 size-[40rem] -translate-x-1/2 -translate-y-1/2 opacity-30 dark:opacity-40 [mask-image:radial-gradient(circle,black_35%,transparent_70%)]"
       />
       <div className="relative mx-auto max-w-6xl px-4 py-36 text-center sm:px-6">
         <h2 className="mx-auto max-w-4xl text-5xl font-semibold text-balance sm:text-6xl">
