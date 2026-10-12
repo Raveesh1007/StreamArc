@@ -1,10 +1,15 @@
 import { Check, Lock } from "lucide-react";
-import { useEffect, useRef, type ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { UsdcToken } from "@/components/brand";
+import { HoloCard } from "@/components/holo-card";
 import { LiveAmount } from "@/components/live-amount";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { toRate } from "@/lib/vault";
+
+export type Hue = "primary" | "cyan" | "usdc-bright" | "violet" | "arc-coral" | "arc-gold";
+
+export const hue = (h: Hue) => (h === "primary" ? {} : ({ "--primary": `var(--${h})` } as CSSProperties));
 
 export function Tile({
   title,
@@ -12,6 +17,7 @@ export function Tile({
   badge,
   className,
   delay = 0,
+  tone = "primary",
   children,
 }: {
   title: string;
@@ -19,28 +25,13 @@ export function Tile({
   badge?: string;
   className?: string;
   delay?: number;
+  tone?: Hue;
   children: ReactNode;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const el = ref.current!;
-    const io = new IntersectionObserver(([e]) => e.isIntersecting && (el.dataset.in = "", io.disconnect()), { threshold: 0.2 });
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
   return (
-    <div
-      ref={ref}
-      style={{ animationDelay: `${delay}ms` }}
-      onPointerMove={(e) => {
-        const r = e.currentTarget.getBoundingClientRect();
-        e.currentTarget.style.setProperty("--x", `${e.clientX - r.left}px`);
-        e.currentTarget.style.setProperty("--y", `${e.clientY - r.top}px`);
-      }}
-      className={cn(
-        "reveal spotlight group relative flex flex-col overflow-hidden rounded-2xl border bg-card transition-colors hover:border-primary/40",
-        className,
-      )}
+    <HoloCard
+      style={{ ...hue(tone), animationDelay: `${delay}ms` }}
+      className={cn("reveal group flex flex-col", className)}
     >
       <div className="relative flex min-h-44 flex-1 items-center justify-center overflow-hidden px-6 pt-6">{children}</div>
       <div className="relative flex items-end justify-between gap-4 p-6">
@@ -54,7 +45,7 @@ export function Tile({
           </Badge>
         )}
       </div>
-    </div>
+    </HoloCard>
   );
 }
 
