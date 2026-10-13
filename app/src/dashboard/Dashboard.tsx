@@ -7,7 +7,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DEPLOYED, IS_MAINNET, NETWORK, short } from "@/lib/chain";
+import { DEPLOYED, IS_MAINNET, NET, NETWORK, setNetwork, short, type Net } from "@/lib/chain";
 import { usd } from "@/lib/vault";
 import { Employee } from "./Employee";
 import { Employer } from "./Employer";
@@ -63,30 +63,54 @@ export function Dashboard() {
               <p className="font-mono text-xs tracking-[0.2em] text-primary uppercase">Payroll</p>
               <h1 className="mt-3 text-4xl font-semibold">{tab === "employer" ? "Run payroll" : "Your pay"}</h1>
               <p className="mt-2 text-muted-foreground">
-                {tab === "employer" ? "Fund the pool, hire, and manage every stream." : "Watch it tick up. Withdraw whenever you like."}
+                {tab === "employer"
+                  ? "Fund the pool, hire, and manage every stream."
+                  : "Watch it tick up. Withdraw whenever you like."}
               </p>
             </div>
-            <Tabs value={tab} onValueChange={(v) => (location.hash = v)}>
-              <TabsList>
-                <TabsTrigger value="employer">Employer</TabsTrigger>
-                <TabsTrigger value="employee">
-                  Employee
-                  {offers > 0 && <span className="ml-1.5 rounded-full bg-primary px-1.5 font-mono text-[10px] text-primary-foreground">{offers}</span>}
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
+            <div className="flex flex-wrap gap-2">
+              <Tabs value={NET} onValueChange={(v) => setNetwork(v as Net)}>
+                <TabsList>
+                  <TabsTrigger value="mainnet">Mainnet</TabsTrigger>
+                  <TabsTrigger value="testnet">
+                    Testnet <span className="ml-1.5 size-1.5 rounded-full bg-warning" />
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+              <Tabs value={tab} onValueChange={(v) => (location.hash = v)}>
+                <TabsList>
+                  <TabsTrigger value="employer">Employer</TabsTrigger>
+                  <TabsTrigger value="employee">
+                    Employee
+                    {offers > 0 && (
+                      <span className="ml-1.5 rounded-full bg-primary px-1.5 font-mono text-[10px] text-primary-foreground">
+                        {offers}
+                      </span>
+                    )}
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
           </div>
 
           {readOnly && account && (
             <p className="mt-6 flex items-center gap-2 rounded-xl border bg-card px-4 py-3 text-sm text-muted-foreground">
-              <Eye className="size-4" /> Viewing <span className="font-mono text-foreground">{short(account)}</span> read-only.
+              <Eye className="size-4" /> Viewing <span className="font-mono text-foreground">{short(account)}</span>{" "}
+              read-only.
             </p>
           )}
 
           <div className="mt-8">
             {!DEPLOYED ? (
               <Notice title="PayrollVault isn't deployed on this network yet">
-                Run <code className="font-mono text-foreground">./deploy-arc.sh</code> or add <code className="font-mono text-foreground">?payroll=0x…</code> to the URL.
+                {IS_MAINNET ? (
+                  "Switch to Testnet above to try it."
+                ) : (
+                  <>
+                    Run <code className="font-mono text-foreground">./deploy-arc.sh</code> or add{" "}
+                    <code className="font-mono text-foreground">?payroll=0x…</code> to the URL.
+                  </>
+                )}
               </Notice>
             ) : !account ? (
               <Notice title="Connect a wallet to get started">

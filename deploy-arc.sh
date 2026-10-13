@@ -91,26 +91,15 @@ cat > "$FILE" <<EOF
 }
 EOF
 
-if [ "$CHAIN_ID" = 5042 ]; then
-  NET="Arc" PUB_RPC="https://rpc.mainnet.arc.io" EXPLORER="https://explorer.arc.io"
-else
-  NET="Arc Testnet" PUB_RPC="https://rpc.testnet.arc.network" EXPLORER="https://explorer.testnet.arc.io"
-fi
 case "$RPC_URL" in
-  *127.0.0.1* | *localhost*) ;;
-  *)
-    cat > "$ROOT/app/config.js" <<EOF
-export default {
-  chainId: $CHAIN_ID,
-  name: "$NET",
-  rpc: "$PUB_RPC",
-  explorer: "$EXPLORER",
-  usdc: "0x3600000000000000000000000000000000000000",
-  payroll: "$PAYROLL",
-};
-EOF
-    echo "==> App config written to app/config.js"
-    ;;
+  *127.0.0.1* | *localhost*) NET="" ;;
+  *) case "$CHAIN_ID" in 5042) NET=mainnet ;; 5042002) NET=testnet ;; *) NET="" ;; esac ;;
 esac
+if [ -n "$NET" ]; then
+  node -e 'const fs = require("fs"), [f, n, a] = process.argv.slice(1), c = JSON.parse(fs.readFileSync(f, "utf8"));
+    c.networks[n].payroll = a; fs.writeFileSync(f, JSON.stringify(c, null, 2) + String.fromCharCode(10));' \
+    "$ROOT/app/config.json" "$NET" "$PAYROLL"
+  echo "==> app/config.json: $NET payroll = $PAYROLL"
+fi
 echo "==> Done. Addresses written to $FILE"
 cat "$FILE"

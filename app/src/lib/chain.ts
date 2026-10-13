@@ -1,8 +1,38 @@
 import { createPublicClient, defineChain, getAddress, http, isAddress, zeroAddress, type Address } from "viem";
-import cfg from "../../config.js";
+import config from "../../config.json";
+
+export type Net = keyof typeof config.networks;
 
 const q = new URLSearchParams(location.search);
 const as = q.get("as");
+const valid = (k: string | null): Net | undefined => (k && Object.hasOwn(config.networks, k) ? (k as Net) : undefined);
+const saved = (() => {
+  try {
+    return localStorage.getItem("network");
+  } catch {
+    return null;
+  }
+})();
+
+export const NET: Net =
+  valid(q.get("network")) ?? valid(saved) ?? (config.networks.mainnet.payroll !== zeroAddress ? "mainnet" : "testnet");
+
+const save = (n: Net) => {
+  try {
+    localStorage.setItem("network", n);
+  } catch {}
+};
+if (valid(q.get("network"))) save(NET);
+
+export function setNetwork(n: Net) {
+  save(n);
+  const url = new URL(location.href);
+  url.searchParams.delete("network");
+  history.replaceState(null, "", url);
+  location.reload();
+}
+
+const cfg = config.networks[NET];
 
 export const RPC = q.get("rpc") || cfg.rpc;
 export const VAULT = (q.get("payroll") || cfg.payroll) as Address;
