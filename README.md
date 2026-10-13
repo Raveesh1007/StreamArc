@@ -21,8 +21,9 @@ cd payroll && forge test
 cd app && npm install && npm run dev
 ```
 
-The app is a Vite + React site: a landing page at `/` and the dashboard at `/app/`. `deploy-arc.sh` writes the vault
-address into `app/config.js`. It deploys on Vercel with Root Directory `app` (Vite preset, output `dist`). For a local chain, open
+The app is a Vite + React site: a landing page at `/` and the dashboard at `/app/`. `app/config.json` holds both Arc
+mainnet and testnet; the dashboard has a Mainnet / Testnet switch (remembered per browser), and `?network=testnet` opens
+a link on testnet. It deploys on Vercel with Root Directory `app` (Vite preset, output `dist`). For a local chain, open
 `http://localhost:5173/app/?rpc=http://127.0.0.1:8545&payroll=<vault>`. Add `&as=<address>` to view any account
 read-only.
 
@@ -74,8 +75,29 @@ RPC_URL=https://rpc.mainnet.arc.io PRIVATE_KEY=0x... ARC_ADMIN=<safe> ./deploy-a
 ```
 
 `deploy-arc.sh` builds with the `optimized` profile, deploys Comptroller → Lockup → Flow → Airdrops → PayrollVault, and
-writes all addresses to `deployments/arc-<chainId>.json`. On a non-local RPC it also writes the vault address into
-`app/config.js`; commit that file to publish the app against the new deployment.
+writes all addresses to `deployments/arc-<chainId>.json`. On a non-local RPC it also sets that network's vault address
+in `app/config.json`, leaving the other network untouched; commit that file to publish the app against it.
+
+## Deployments
+
+Same addresses on Arc mainnet (`5042`, [explorer](https://explorer.arc.io)) and testnet (`5042002`,
+[explorer](https://explorer.testnet.arc.io)): one deployer, same nonces.
+
+| Contract                    | Address                                      |
+| --------------------------- | -------------------------------------------- |
+| PayrollVault                | `0xe9C616E7604b39D11851Ae0467077b10E5111685` |
+| Comptroller (proxy)         | `0xB6056CA73Beaa2baF03419f3CAA2e0Ba564Fe727` |
+| Comptroller implementation  | `0x9b9B8d20EB83b7A67aDC742D3db83cc45f4C9198` |
+| Lockup                      | `0x7FB00Dd54C509D1b698610aC781cf92829497F08` |
+| BatchLockup                 | `0xFfd8FE53f6C29Ed6BE387e06580675305439d0Da` |
+| LockupNFTDescriptor         | `0xF13d46904999B77f9134B2124a602750A067119c` |
+| Flow                        | `0x55F92fa58a5AB9227E40c5393DAAe8FEb43D0803` |
+| FlowNFTDescriptor           | `0xc509b8b301094bAbA6a5012C1C921178dEA838B3` |
+| FactoryMerkleInstant        | `0x185397C53851DdBb8Dc81Bf454d31536F2Bd3AeF` |
+| FactoryMerkleLL             | `0x333D1EFFdF449f821d53117743dfB10eCC320471` |
+| FactoryMerkleLT             | `0x957508527fE3e4659255907D5d69B9e83218C995` |
+| FactoryMerkleVCA            | `0x4990425EE5377A19ec56734EeAF3800c8fF2d2Be` |
+| FactoryMerkleExecute        | `0x10E1519e5dC3B6cB94Ad39419501C8d918eb4fAE` |
 
 ## License
 

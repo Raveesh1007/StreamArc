@@ -44,8 +44,9 @@ cd lockup && FOUNDRY_PROFILE=lite forge test --match-test <name>
 Expected: 1,482 pass (utils 200, lockup 616, flow 268, airdrops 398). `payroll` is standalone (forge-std vendored in
 `payroll/lib`, no bun): `cd payroll && forge test`, 22 pass.
 
-App: `cd app && npm install && npm run dev` (build: `npm run build` → `app/dist`). URL params override `config.js`:
-`?rpc=`, `?payroll=`, and `?as=<address>` for a read-only view. Local demo needs a token at Arc's USDC address:
+App: `cd app && npm install && npm run dev` (build: `npm run build` → `app/dist`). `app/config.json` holds `mainnet`
+and `testnet`; the dashboard switch (saved in localStorage) or `?network=` picks one. URL params override it: `?rpc=`,
+`?payroll=`, and `?as=<address>` for a read-only view. Local demo needs a token at Arc's USDC address:
 `cast rpc anvil_setCode 0x3600…0000 "$(cd payroll && forge inspect MockUSDC deployedBytecode)"`.
 
 ## App design system
@@ -72,8 +73,8 @@ App: `cd app && npm install && npm run dev` (build: `npm run build` → `app/dis
   updating the matching `addr "<label>"` call.
 - Local anvil and testnet share chain id 5042002, so both write `deployments/arc-5042002.json`. `deployments/` is
   gitignored; publish live addresses in the README.
-- `deploy-arc.sh` deploys PayrollVault last and, for non-local RPCs, rewrites `app/config.js` (chain 5042 → mainnet
-  RPC/explorer, otherwise testnet). Commit it after a live deploy.
+- `deploy-arc.sh` deploys PayrollVault last and, for non-local RPCs, sets `payroll` for that network only in
+  `app/config.json` (chain 5042 → `mainnet`, 5042002 → `testnet`). Commit it after a live deploy.
 - Networks: testnet `https://rpc.testnet.arc.network` (`rpc.testnet.arc.io` also works), explorer
   `https://explorer.testnet.arc.io`; mainnet `https://rpc.mainnet.arc.io` (chain 5042), explorer
   `https://explorer.arc.io`. Both explorers are Blockscout.
@@ -89,7 +90,7 @@ App: `cd app && npm install && npm run dev` (build: `npm run build` → `app/dis
   server features are dropped, stay on Vite.
 - **ABIs:** generate from forge artifacts (`<pkg>/out/<C>.sol/<C>.json`) into `app/src/abi/*.ts` as `as const`, and
   commit them (the deploy host has no Foundry). Don't hand-write ABIs for Lockup/Flow; their args are nested structs.
-- **Addresses:** `deploy-arc.sh` writes every address from `deployments/arc-<chainId>.json` into `app/config.js`
+- **Addresses:** `deploy-arc.sh` writes every address from `deployments/arc-<chainId>.json` into `app/config.json`
   (not just `payroll`); `lib/chain.ts` exports them as `ADDR`.
 - **Code layout:** one `src/lib/<protocol>.ts` per protocol (`vault.ts`, `lockup.ts`, `flow.ts`, `airdrops.ts`) for
   reads and formatting. All writes go through `useTx` with `{ address, abi }`; approve USDC to the target contract
