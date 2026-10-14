@@ -57,6 +57,8 @@ and `testnet`; the dashboard switch (saved in localStorage) or `?network=` picks
 - UI primitives come from shadcn/ui in `src/components/ui`; add more with `npx shadcn@latest add <name>`, then fix
   the CLI's `from "cn"` import to `@/lib/utils`. Contract reads, formatting and ABIs live only in `src/lib/vault.ts`.
 - Arc and USDC logos are the official files in `src/assets/brand` (white for dark, black for light via `brand.tsx`).
+- StreamArc's own logo kit (icon SVG/PNG, horizontal logo on dark/light) is in root `brand/`. If `Mark` in `brand.tsx`
+  changes, regenerate it and `app/public/favicon.svg`.
 - `AsciiCoin` (three.js + AsciiEffect, lazy-loaded) renders 3D coins from the official logo paths. Section tiles use
   `Tile` from `src/landing/bento.tsx`; animations are keyframes in `index.css`.
 - Check layouts at 390px wide; headless Chrome can't go below ~500px, so render the page in a 390px iframe.
